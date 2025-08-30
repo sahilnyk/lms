@@ -1,4 +1,4 @@
-#!/home/sahilnayak/Desktop/scms/venv/bin/python
+#!/home/sahilnayak/Desktop/lms/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
