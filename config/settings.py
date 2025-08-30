@@ -41,6 +41,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # libraries for security
+    "axes",
+    "simple_history",
+    "two_factor",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+
+    # custom apps
+    "accounts",
 ]
 
 MIDDLEWARE = [
