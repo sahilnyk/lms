@@ -34,10 +34,11 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',      
+    'grappelli.dashboard',              
     'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -148,7 +149,7 @@ STATICFILES_DIRS = [
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# GRAPPELLI_INDEX_DASHBOARD = 'app.dashboard.AdminDashboard'
+GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
 GRAPPELLI_ADMIN_TITLE = "EduFlow-lms"
 GRAPPELLI_CLEAN_INPUT_TYPES = True
 
