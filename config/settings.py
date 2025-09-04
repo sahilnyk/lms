@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-h8gla7eh3$p*2rb8bfk=nmr5o+6*k!4uqz$-@)$9nz8f1n@47$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
@@ -41,17 +41,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # libraries for security
-    "axes",
-    "simple_history",
-    "two_factor",
-    "django_otp",
-    "django_otp.plugins.otp_totp",
-
     # custom apps
     "accounts",
 ]
+
+
+# settings.py
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -60,9 +55,15 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 ROOT_URLCONF = 'config.urls'
 
@@ -149,8 +150,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # GRAPPELLI_INDEX_DASHBOARD = 'app.dashboard.AdminDashboard'
 GRAPPELLI_ADMIN_TITLE = "EduFlow-lms"
-# GRAPPELLI_CLEAN_INPUT_TYPES = False
-# GRAPPELLI_CUSTOM_CSS = "css/admin-custom.css"
-
-
+GRAPPELLI_CLEAN_INPUT_TYPES = True
 
