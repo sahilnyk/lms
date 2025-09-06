@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-h8gla7eh3$p*2rb8bfk=nmr5o+6*k!4uqz$-@)$9nz8f1n@47$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0bc991a1af13.ngrok-free.app"]
 
 
 # Application definition
@@ -42,8 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'simple_history',
     # custom apps
-    "accounts",
+
 ]
 
 
@@ -59,12 +60,8 @@ MIDDLEWARE = [
     # 'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
-
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-]
-
 
 ROOT_URLCONF = 'config.urls'
 
@@ -152,4 +149,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
 GRAPPELLI_ADMIN_TITLE = "EduFlow-lms"
 GRAPPELLI_CLEAN_INPUT_TYPES = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://0bc991a1af13.ngrok-free.app",
+]
 

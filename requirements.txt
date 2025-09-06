@@ -3,7 +3,11 @@ cffi==1.17.1
 Django==4.2
 django-formtools==2.5.1
 django-grappelli==4.0.2
+django-otp==1.6.1
+django-phonenumber-field==8.1.0
 django-simple-history==3.10.1
+django-two-factor-auth==1.17.0
+phonenumbers==9.0.13
 psycopg2-binary==2.9.10
 pycparser==2.22
 pycryptodome==3.23.0

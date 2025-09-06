@@ -1,5 +1,3 @@
-
-
 from django.utils.translation import gettext_lazy as _
 from grappelli.dashboard import modules, Dashboard
 
@@ -13,12 +11,12 @@ class CustomIndexDashboard(Dashboard):
         super().init_with_context(context)
 
         self.children.append(modules.Group(
-            _('Group: Administration & Applications'),
+            _('User Management'),
             column=1,
             collapsible=True,
             children=[
                 modules.AppList(
-                    _('Administration EduFlow-LMS'),
+                    _(''),
                     column=1,
                     collapsible=False,
                     models=('django.contrib.*',),
@@ -42,12 +40,12 @@ class CustomIndexDashboard(Dashboard):
         ))
 
         # append an app list module for "Administration"
-        self.children.append(modules.ModelList(
-            _('ModelList: Administration'),
-            column=1,
-            collapsible=False,
-            models=('django.contrib.*',),
-        ))
+        # self.children.append(modules.ModelList(
+        #     _('ModelList: Administration'),
+        #     column=1,
+        #     collapsible=False,
+        #     models=('django.contrib.*',),
+        # ))
 
         # append another link list module for "support".
         self.children.append(modules.LinkList(
