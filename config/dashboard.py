@@ -10,44 +10,31 @@ class CustomIndexDashboard(Dashboard):
     def init_with_context(self, context):
         super().init_with_context(context)
 
-        self.children.append(modules.Group(
+        self.children.append(modules.AppList(
             _('User Management'),
             column=1,
+            models=('django.contrib.auth.*',),
             collapsible=True,
-            children=[
-                modules.AppList(
-                    _(''),
-                    column=1,
-                    collapsible=False,
-                    models=('django.contrib.*',),
-                ),
-                modules.AppList(
-                    _('Applications'),
-                    column=1,
-                    css_classes=('collapse closed',),
-                    exclude=('django.contrib.*',),
-                )
-            ]
-        ))
-
-        # append an app list module for "Applications"
-        self.children.append(modules.AppList(
-            _('AppList: Applications'),
-            collapsible=True,
-            column=1,
             css_classes=('collapse closed',),
-            exclude=('django.contrib.*',),
         ))
 
-        # append an app list module for "Administration"
-        # self.children.append(modules.ModelList(
-        #     _('ModelList: Administration'),
-        #     column=1,
-        #     collapsible=False,
-        #     models=('django.contrib.*',),
-        # ))
+        self.children.append(modules.AppList(
+            _('SIS'),
+            column=1,
+            models=('students.*',),
+            collapsible=True,
+            css_classes=('collapse closed',),
+        ))
 
-        # append another link list module for "support".
+        self.children.append(modules.AppList(
+            _('Administration'),
+            column=1,
+            models=('django.contrib.*',),
+            exclude=('django.contrib.auth.*',),
+            collapsible=True,
+            css_classes=('collapse closed',),
+        ))
+
         self.children.append(modules.LinkList(
             _('Media Management'),
             column=2,
@@ -60,7 +47,6 @@ class CustomIndexDashboard(Dashboard):
             ]
         ))
 
-        # append another link list module for "support".
         self.children.append(modules.LinkList(
             _('Support'),
             column=2,
@@ -72,18 +58,13 @@ class CustomIndexDashboard(Dashboard):
                 },
                 {
                     'title': _('Grappelli Documentation'),
-                    'url': 'http://packages.python.org/django-grappelli/',
-                    'external': True,
-                },
-                {
-                    'title': _('Grappelli Google-Code'),
-                    'url': 'http://code.google.com/p/django-grappelli/',
+                    'url': 'http://django-grappelli.readthedocs.io/',
                     'external': True,
                 },
             ]
         ))
 
-        # append a feed module
+
         self.children.append(modules.Feed(
             _('Latest Django News'),
             column=2,
@@ -91,10 +72,9 @@ class CustomIndexDashboard(Dashboard):
             limit=5
         ))
 
-        # append a recent actions module
         self.children.append(modules.RecentActions(
             _('Recent actions'),
             limit=5,
             collapsible=False,
-            column=3,
+            column=2,  # Try 1 or 2
         ))
