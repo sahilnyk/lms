@@ -35,7 +35,7 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0bc991a1af13.ngrok-free.app"]
 
 INSTALLED_APPS = [
     'django.contrib.contenttypes',      
-    'grappelli.dashboard',              
+    # 'grappelli.dashboard',              
     'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,13 +43,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # third-party
-    'cities_light',
-    'smart_selects',
+    # 'cities_light',
+    # 'smart_selects',
     'phonenumber_field',
     'simple_history',
-    'intl_tel_input',  
+    # 'intl_tel_input',  
     # your apps
-    'students',
+
 ]
 
 
@@ -150,7 +150,7 @@ STATICFILES_DIRS = [
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
+# GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
 GRAPPELLI_ADMIN_TITLE = "EduFlow-lms"
 GRAPPELLI_CLEAN_INPUT_TYPES = True
 

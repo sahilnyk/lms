@@ -13,7 +13,6 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('admin/', admin.site.urls),
     path('', lambda request: HttpResponseRedirect('/admin/')),
-    path('chaining/', include('smart_selects.urls')),
 ]
 
 if settings.DEBUG:
