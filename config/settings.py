@@ -42,13 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # third-party
-    # 'cities_light',
-    # 'smart_selects',
     'phonenumber_field',
     'simple_history',
-    # 'intl_tel_input',  
-    # your apps
+    'academics.apps.AcademicsConfig',
 
 ]
 
