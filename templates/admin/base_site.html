@@ -4,4 +4,21 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'css/custom_admin.css' %}?v=20251004">
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // find the "View site" link inside Grappelli user tools and change text to "Home"
+        var tools = document.getElementById('grp-user-tools');
+        if (!tools) return;
+        var links = tools.getElementsByTagName('a');
+        for (var i = 0; i < links.length; i++) {
+            var a = links[i];
+            var txt = a.textContent.trim();
+            var href = a.getAttribute('href') || '';
+            if (txt === 'View site' || href === '/' || href === window.location.origin + '/') {
+                a.textContent = 'Home';
+                break;
+            }
+        }
+    });
+    </script>
 {% endblock %}
