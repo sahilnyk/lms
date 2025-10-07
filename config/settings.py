@@ -91,7 +91,7 @@ DATABASES = {
         'NAME': 'scms_db',
         'USER': 'scms_admin',
         'PASSWORD': 'admin.123',
-        'HOST': 'db',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
