@@ -71,7 +71,6 @@
         ensureTiny(function () {
             initAll();
             observeMutations();
-            // ensure content saved before form submit
             document.addEventListener("submit", function () {
                 try { window.tinyMCE && window.tinyMCE.triggerSave(); } catch (e) { }
             }, true);
