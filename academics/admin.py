@@ -1,13 +1,18 @@
 from django.contrib import admin
+from django.db import models
 from django.db.models import Count
+from django.forms import Textarea
 from .models import Course, Lesson, LessonChecklistItem
 from grappelli.forms import GrappelliSortableHiddenMixin
 
 class LessonInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     model = Lesson
-    fields = ("title", "is_done", "position")
+    fields = ("title", "content", "is_done", "position")
     extra = 1
     sortable_field_name = "position"
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'class': 'tinymce'})},
+    }
 
 class ChecklistInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     model = LessonChecklistItem
@@ -37,6 +42,15 @@ class CourseAdmin(admin.ModelAdmin):
     list_per_page = 10
     ordering = ("-created",)
     inlines = [LessonInline]
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'class': 'tinymce'})},
+    }
+
+    class Media:
+        js = [
+            '/static/grappelli/tinymce/jscripts/tiny_mce/tiny_mce.js',
+            '/static/js/tinymce_setup.js',
+        ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -54,6 +68,15 @@ class LessonAdmin(admin.ModelAdmin):
     list_per_page = 10
     ordering = ("course", "position")
     inlines = [ChecklistInline]
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'class': 'tinymce'})},
+    }
+
+    class Media:
+        js = [
+            '/static/grappelli/tinymce/jscripts/tiny_mce/tiny_mce.js',
+            '/static/js/tinymce_setup.js',
+        ]
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
