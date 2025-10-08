@@ -4,6 +4,22 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'css/custom_admin.css' %}?v=20251004">
+    <!-- Intro.js CSS (CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
+    <style>
+      /* small button styling fallback */
+      .eduflow-tour-btn { font-size:13px; }
+    </style>
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <!-- Load our consolidated admin tour script (it loads intro.js if needed) -->
+    <script src="{% static 'js/admin_tour.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         // change "View site" -> "Home" (existing)
