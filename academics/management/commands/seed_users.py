@@ -11,13 +11,13 @@ def clean_part(s):
     return re.sub(r'[^a-z0-9]', '', s.lower())
 
 class Command(BaseCommand):
-    help = "Create teacher and student users with Indian names and matching emails."
+    help = "Create teacher and student users with Indian names and name-based usernames/emails (no 'teacher'/'student' prefixes)."
 
     def add_arguments(self, parser):
         parser.add_argument("--teachers", type=int, default=10, help="Number of teacher users to create")
         parser.add_argument("--students", type=int, default=100, help="Number of student users to create")
         parser.add_argument("--password", type=str, default="password123", help="Password for all created users")
-        parser.add_argument("--clear", action="store_true", help="Remove previously created users with prefixes before creating")
+        parser.add_argument("--clear", action="store_true", help="Remove users in Teachers/Students groups before creating")
 
     def handle(self, *args, **options):
         fake = Faker("en_IN")
@@ -30,13 +30,12 @@ class Command(BaseCommand):
         students_group, _ = Group.objects.get_or_create(name="Students")
 
         if clear:
-            User.objects.filter(username__startswith="teacher_").delete()
-            User.objects.filter(username__startswith="student_").delete()
-            self.stdout.write("Cleared existing seeded users (teacher_/student_ prefixes)")
+            qs = User.objects.filter(groups__name__in=["Teachers", "Students"]).distinct()
+            count = qs.count()
+            qs.delete()
+            self.stdout.write(f"Cleared {count} users from Teachers/Students groups")
 
         domains = ["gmail.com", "yahoo.in", "outlook.com", "hotmail.com"]
-
-        created = {"teachers": 0, "students": 0}
 
         def make_unique_email(base, domain):
             email = f"{base}@{domain}"
@@ -46,24 +45,27 @@ class Command(BaseCommand):
                 suffix += 1
             return email
 
-        def make_unique_username(prefix, base):
-            uname = f"{prefix}_{base}"
+        def make_unique_username(base):
+            uname = base
             suffix = 1
             while User.objects.filter(username=uname).exists():
-                uname = f"{prefix}_{base}{suffix}"
+                uname = f"{base}{suffix}"
                 suffix += 1
             return uname
 
-        # create teachers
-        for i in range(1, num_teachers + 1):
+        created = {"teachers": 0, "students": 0}
+
+        for _ in range(num_teachers):
             name = fake.name()
             parts = name.split(" ", 1)
             first = parts[0]
             last = parts[1] if len(parts) > 1 else ""
             base = clean_part(f"{first}.{last}" if last else first)
+            if not base:
+                base = clean_part(fake.user_name())
             domain = random.choice(domains)
             email = make_unique_email(base, domain)
-            username = make_unique_username("teacher", base)
+            username = make_unique_username(base)
             user = User.objects.create_user(
                 username=username,
                 email=email,
@@ -76,16 +78,17 @@ class Command(BaseCommand):
             user.groups.add(teachers_group)
             created["teachers"] += 1
 
-        # create students
-        for i in range(1, num_students + 1):
+        for _ in range(num_students):
             name = fake.name()
             parts = name.split(" ", 1)
             first = parts[0]
             last = parts[1] if len(parts) > 1 else ""
             base = clean_part(f"{first}.{last}" if last else first)
+            if not base:
+                base = clean_part(fake.user_name())
             domain = random.choice(domains)
             email = make_unique_email(base, domain)
-            username = make_unique_username("student", base)
+            username = make_unique_username(base)
             user = User.objects.create_user(
                 username=username,
                 email=email,
