@@ -1,47 +1,47 @@
 (function ($) {
     "use strict";
 
-    function initTinyFor(el) {
-        var id = el.id;
-        if (!id) return;
-        if (tinymce.get(id)) return;
+    function initTiny(el) {
+        if (!el || !el.id) return;
+        if (tinymce.get(el.id)) return;
         tinymce.init({
-            selector: '#' + id,
+            selector: "#" + el.id,
             menubar: false,
-            toolbar: 'undo redo | styleselect | bold italic | bullist numlist | link',
-            height: 250,
-            // add more TinyMCE config here if needed
-            setup: function (editor) {
-                // If this is the empty inline template (prefix), remove the instance
-                editor.on('init', function () {
-                    var $el = $(editor.getElement());
-                    if ($el.closest('.empty-form, .inline-empty-form').length || (editor.id && editor.id.indexOf('__prefix__') !== -1)) {
-                        editor.remove();
-                    }
-                });
-            }
+            plugins: "lists link paste",
+            toolbar: "undo redo | formatselect | bold italic | bullist numlist | link",
+            height: 280,
+            branding: false,
+            // ensure toolbar visible above admin UI
+            fixed_toolbar_container: null,
+            // ensure not inline mode
+            inline: false
         });
     }
 
+    function removeTiny(el) {
+        if (!el || !el.id) return;
+        var inst = tinymce.get(el.id);
+        if (inst) inst.remove();
+    }
+
     $(function () {
-        // initialize existing textareas (exclude the empty form)
-        $('textarea').each(function () {
+        // init only textareas marked .tinymce and not the empty-form prefix
+        $("textarea.tinymce").each(function () {
             var $t = $(this);
-            if ($t.closest('.empty-form, .inline-empty-form').length) return;
-            initTinyFor(this);
+            if ($t.closest(".empty-form, .inline-empty-form").length) return;
+            if (this.id && this.id.indexOf("__prefix__") === -1) initTiny(this);
         });
 
-        // when a new inline row is added (Django formset event)
-        $(document).on('formset:added', function (event, $row) {
-            $row.find('textarea').each(function () { initTinyFor(this); });
+        // handle formset/add/remove events used by Django and Grappelli
+        $(document).on("formset:added inline:added", function (e, $row) {
+            // some events pass the row as second arg, some provide it in e.target
+            var $r = $row && $row.length ? $row : $(e.target);
+            $r.find("textarea.tinymce").each(function () { initTiny(this); });
         });
 
-        // when an inline row is removed, clean up TinyMCE instances
-        $(document).on('formset:removed', function (event, $row) {
-            $row.find('textarea').each(function () {
-                var id = this.id;
-                if (id && tinymce.get(id)) tinymce.get(id).remove();
-            });
+        $(document).on("formset:removed inline:removed", function (e, $row) {
+            var $r = $row && $row.length ? $row : $(e.target);
+            $r.find("textarea.tinymce").each(function () { removeTiny(this); });
         });
     });
 })(window.django && window.django.jQuery ? window.django.jQuery : window.jQuery);
