@@ -31,8 +31,10 @@ class Command(BaseCommand):
 
         if clear:
             qs = User.objects.filter(groups__name__in=["Teachers", "Students"]).distinct()
-            count = qs.count()
-            qs.delete()
+            pks = list(qs.values_list('pk', flat=True))
+            count = len(pks)
+            if pks:
+                User.objects.filter(pk__in=pks).delete()
             self.stdout.write(f"Cleared {count} users from Teachers/Students groups")
 
         domains = ["gmail.com", "yahoo.in", "outlook.com", "hotmail.com"]
