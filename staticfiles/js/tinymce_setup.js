@@ -9,8 +9,10 @@
         tinymce.init({
             selector: "#" + el.id,
             menubar: false,
-            plugins: ["lists", "link", "paste"],   // use array to avoid combined-name requests
-            toolbar: "undo redo | formatselect | bold italic | bullist numlist | link",
+            // IMPORTANT: leave plugins empty to avoid auto-loading missing plugin folders
+            plugins: "",
+            // keep toolbar simple — add more only after installing plugin files
+            toolbar: "undo redo | formatselect | bold italic | bullist numlist",
             height: 280,
             branding: false,
             inline: false
