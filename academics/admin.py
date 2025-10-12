@@ -9,13 +9,6 @@ class LessonInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     extra = 1
     sortable_field_name = "position"
 
-    class Media:
-        js = [
-            "/static/grappelli/tinymce/jscripts/tiny_mce/tiny_mce.js",
-            "/static/js/tinymce_setup.js",
-        ]
-
-
 class ChecklistInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     model = LessonChecklistItem
     fields = ("text", "completed", "position")
@@ -53,12 +46,6 @@ class CourseAdmin(admin.ModelAdmin):
         return getattr(obj, "_lesson_count", obj.lessons.count())
     lesson_count.short_description = "Lessons"
 
-    class Media:
-        js = [
-            "/static/grappelli/tinymce/jscripts/tiny_mce/tiny_mce.js",
-            "/static/js/tinymce_setup.js",
-        ]
-
 class LessonAdmin(admin.ModelAdmin):
     list_display = ("title", "course", "position", "is_done")
     search_fields = ("title", "content", "course__title")
@@ -67,12 +54,6 @@ class LessonAdmin(admin.ModelAdmin):
     list_per_page = 10
     ordering = ("course", "position")
     inlines = [ChecklistInline]
-
-    class Media:
-        js = [
-            "/static/grappelli/tinymce/jscripts/tiny_mce/tiny_mce.js",
-            "/static/js/tinymce_setup.js",
-        ]
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)

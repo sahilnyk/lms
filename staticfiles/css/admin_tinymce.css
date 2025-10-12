@@ -1,0 +1,7 @@
+/* ensure TinyMCE UI appears above admin UI */
+.mce-container,
+.mce-tooltip,
+.mce-menu,
+.mce-panel {
+    z-index: 99999 !important;
+}
