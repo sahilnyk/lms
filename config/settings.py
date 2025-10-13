@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 from django.templatetags.static import static
 from django.urls import reverse_lazy
@@ -28,7 +28,11 @@ SECRET_KEY = 'django-insecure-h8gla7eh3$p*2rb8bfk=nmr5o+6*k!4uqz$-@)$9nz8f1n@47$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0bc991a1af13.ngrok-free.app"]
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    os.environ.get('RENDER_EXTERNAL_HOSTNAME', '*'),
+]
 
 
 # Application definition
