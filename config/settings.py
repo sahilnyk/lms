@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+import os
 from pathlib import Path
 from django.templatetags.static import static
 from django.urls import reverse_lazy
@@ -91,11 +92,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'scms_db',
-        'USER': 'scms_admin',
-        'PASSWORD': 'admin.123',
-        'HOST': 'db',
-        'PORT': '5432',
+        'NAME': os.environ.get('DATABASE_NAME', 'scms_db'),
+        'USER': os.environ.get('DATABASE_USER', 'scms_admin'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+        'HOST': os.environ.get('DATABASE_HOST', 'db'), 
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
 
