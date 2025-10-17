@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 # Create your models here.
@@ -6,8 +7,23 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
+    # link to users via a through model that records enrollment timestamp
+    students = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, through="Enrollment", related_name="courses", blank=True
+    )
+
     def __str__(self):
         return self.title
+
+    def enroll(self, user):
+        """Enroll user (creates Enrollment if not exists)."""
+        Enrollment.objects.get_or_create(student=user, course=self)
+
+    def is_enrolled(self, user):
+        return self.enrollments.filter(student=user).exists()
+
+    def enrollment_date_for(self, user):
+        return self.enrollments.filter(student=user).values_list("enrolled_at", flat=True).first()
 
 class Lesson(models.Model):
     course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
@@ -35,3 +51,16 @@ class LessonChecklistItem(models.Model):
 
     def __str__(self):
         return self.text
+
+# Enrollment through model — records enrollment timestamp automatically
+class Enrollment(models.Model):
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="enrollments", on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name="enrollments", on_delete=models.CASCADE)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("student", "course")
+        ordering = ("-enrolled_at",)
+
+    def __str__(self):
+        return f"{self.student} -> {self.course} at {self.enrolled_at}"
