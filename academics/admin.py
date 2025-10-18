@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import Count
-from .models import Course, Lesson, LessonChecklistItem
+from .models import Course, Lesson, LessonChecklistItem, Enrollment
 from grappelli.forms import GrappelliSortableHiddenMixin
 
 class LessonInline(GrappelliSortableHiddenMixin, admin.TabularInline):
@@ -14,6 +14,12 @@ class ChecklistInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     fields = ("text", "completed", "position")
     extra = 1
     sortable_field_name = "position"
+
+class EnrollmentInline(admin.TabularInline):
+    model = Enrollment
+    fields = ("student", "enrolled_at")
+    readonly_fields = ("enrolled_at",)
+    extra = 0
 
 class HasLessonsFilter(admin.SimpleListFilter):
     title = "has lessons"
@@ -36,7 +42,7 @@ class CourseAdmin(admin.ModelAdmin):
     list_filter = (HasLessonsFilter, "created")
     list_per_page = 10
     ordering = ("-created",)
-    inlines = [LessonInline]
+    inlines = [LessonInline, EnrollmentInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -58,3 +64,4 @@ class LessonAdmin(admin.ModelAdmin):
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(LessonChecklistItem)
+admin.site.register(Enrollment)
