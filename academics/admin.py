@@ -19,7 +19,21 @@ class EnrollmentInline(admin.TabularInline):
     model = Enrollment
     fields = ("student", "enrolled_at")
     readonly_fields = ("enrolled_at",)
-    extra = 0
+    extra = 1
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # limit the student dropdown to users in Group "Students" if it exists,
+        # otherwise show all users. Keeps compatibility with default auth.
+        if db_field.name == "student":
+            from django.contrib.auth import get_user_model
+            from django.contrib.auth.models import Group
+
+            User = get_user_model()
+            try:
+                kwargs["queryset"] = Group.objects.get(name="Students").user_set.all()
+            except Group.DoesNotExist:
+                kwargs["queryset"] = User.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class HasLessonsFilter(admin.SimpleListFilter):
     title = "has lessons"
