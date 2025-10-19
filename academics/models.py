@@ -1,13 +1,11 @@
 from django.conf import settings
 from django.db import models
 
-# Create your models here.
 class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
-    # link to users via a through model that records enrollment timestamp
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL, through="Enrollment", related_name="courses", blank=True
     )
@@ -16,7 +14,6 @@ class Course(models.Model):
         return self.title
 
     def enroll(self, user):
-        """Enroll user (creates Enrollment if not exists)."""
         Enrollment.objects.get_or_create(student=user, course=self)
 
     def is_enrolled(self, user):
@@ -52,7 +49,6 @@ class LessonChecklistItem(models.Model):
     def __str__(self):
         return self.text
 
-# Enrollment through model — records enrollment timestamp automatically
 class Enrollment(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="enrollments", on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name="enrollments", on_delete=models.CASCADE)
