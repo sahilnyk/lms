@@ -73,6 +73,14 @@ class CourseAdminForm(forms.ModelForm):
         model = Course
         fields = "__all__"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            teachers_qs = Group.objects.get(name="Teachers").user_set.all()
+        except Group.DoesNotExist:
+            teachers_qs = User.objects.all()
+        self.fields["teacher"].queryset = teachers_qs
+
 class CourseAdmin(admin.ModelAdmin):
     form = CourseAdminForm
     list_display = ("title", "created", "lesson_count")

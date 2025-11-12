@@ -5,6 +5,14 @@ class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="teaching_courses",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Assign a teacher to this course."
+    )
 
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL, through="Enrollment", related_name="courses", blank=True
