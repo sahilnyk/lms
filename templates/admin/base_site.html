@@ -4,52 +4,42 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'css/custom_admin.css' %}?v=20251004">
-    <!-- Intro.js CSS (CDN) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
     <style>
-      /* small button styling fallback */
-      .eduflow-tour-btn { font-size:13px; }
+      /* Dashboard width fix - inline CSS */
+      .narrow-module {
+          box-sizing: border-box !important;
+          max-width: 360px !important;
+          flex: 0 0 360px !important;
+          min-width: 300px;
+          margin-right: 20px;
+      }
+      .grp-group.narrow-module {
+          box-sizing: border-box !important;
+          max-width: 360px !important;
+          flex: 0 0 360px !important;
+          background: transparent;
+          border: none;
+          padding: 0;
+      }
+      .grp-group.narrow-module .grp-module,
+      .narrow-module .grp-module {
+          width: 100%;
+          box-sizing: border-box;
+      }
+      @media (max-width: 900px) {
+          .narrow-module, .grp-group.narrow-module {
+              max-width: 100% !important;
+              flex: 0 0 100% !important;
+          }
+      }
     </style>
-{% endblock %}
-
-{% block extrahead %}
-    {{ block.super }}
-    <!-- Load our consolidated admin tour script (it loads intro.js if needed) -->
-    <script src="{% static 'js/admin_tour.js' %}"></script>
 {% endblock %}
 
 {% block footer %}
     {{ block.super }}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // change "View site" -> "Home" (existing)
         var tools = document.getElementById('grp-user-tools');
-        if (tools) {
-            var links = tools.getElementsByTagName('a');
-            for (var i = 0; i < links.length; i++) {
-                var a = links[i];
-                var txt = a.textContent.trim();
-                var href = a.getAttribute('href') || '';
-                if (txt === 'View site' || href === '/' || href === window.location.origin + '/') {
-                    a.textContent = 'Home';
-                    break;
-                }
-            }
-        }
-
-        // change admin page header "Site administration" -> "Edu-flow Dashboard"
-        var header = document.querySelector('#grp-content-title header h1');
-        if (!header) {
-            header = document.querySelector('header h1'); // fallback
-        }
-        if (header) {
-            header.textContent = 'Edu-flow Dashboard';
-        }
-
-        // also update browser tab title if desired
-        if (document.title && document.title.indexOf('Site administration') !== -1) {
-            document.title = document.title.replace('Site administration', 'Edu-flow Dashboard');
-        }
     });
     </script>
 {% endblock %}

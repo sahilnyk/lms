@@ -25,15 +25,11 @@ class EnrollmentInline(admin.TabularInline):
     fields = ("student", "enrolled_at")
     readonly_fields = ("enrolled_at",)
     extra = 1
+    verbose_name = "Student Enrollment"
+    verbose_name_plural = "Student Enrollments"
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        # limit the student dropdown to users in Group "Students" if it exists,
-        # otherwise show all users. Keeps compatibility with default auth.
         if db_field.name == "student":
-            from django.contrib.auth import get_user_model
-            from django.contrib.auth.models import Group
-
-            User = get_user_model()
             try:
                 kwargs["queryset"] = Group.objects.get(name="Students").user_set.all()
             except Group.DoesNotExist:
@@ -56,7 +52,6 @@ class HasLessonsFilter(admin.SimpleListFilter):
         return queryset
 
 class CourseAdminForm(forms.ModelForm):
-    # dynamic queryset will be set in get_form()
     students_to_add = forms.ModelMultipleChoiceField(
         queryset=User.objects.none(),
         required=False,
@@ -75,36 +70,56 @@ class CourseAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Teacher field - limit to Teachers group
         try:
             teachers_qs = Group.objects.get(name="Teachers").user_set.all()
         except Group.DoesNotExist:
             teachers_qs = User.objects.all()
         self.fields["teacher"].queryset = teachers_qs
+        self.fields["teacher"].label = "Assign Teacher"
+        self.fields["teacher"].help_text = "Select a teacher from the Teachers group to assign to this course."
 
-class CourseAdmin(admin.ModelAdmin):
-    form = CourseAdminForm
-    list_display = ("title", "created", "lesson_count")
-    search_fields = ("title", "description")
-    list_filter = (HasLessonsFilter, "created")
-    list_per_page = 10
-    ordering = ("-created",)
-    inlines = [LessonInline, EnrollmentInline]
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        # set students_to_add queryset to Students group if present, else all users
+        # Set students_to_add queryset to Students group
         try:
             students_qs = Group.objects.get(name="Students").user_set.all()
         except Group.DoesNotExist:
             students_qs = User.objects.all()
-        form.base_fields["students_to_add"].queryset = students_qs
+        self.fields["students_to_add"].queryset = students_qs
+
+class CourseAdmin(admin.ModelAdmin):
+    form = CourseAdminForm
+    list_display = ("title", "teacher", "created", "lesson_count", "student_count")
+    search_fields = ("title", "description", "teacher__username", "teacher__first_name", "teacher__last_name")
+    list_filter = (HasLessonsFilter, "created", "teacher")
+    list_per_page = 10
+    ordering = ("-created",)
+    inlines = [LessonInline, EnrollmentInline]
+    
+    fieldsets = (
+        ("Course Information", {
+            "fields": ("title", "description")
+        }),
+        ("Teacher Assignment", {
+            "fields": ("teacher",),
+            "description": "Assign a teacher from the Teachers group to this course."
+        }),
+        ("Student Enrollment", {
+            "fields": ("students_to_add", "enroll_all"),
+            "classes": ("collapse",),
+            "description": "Manually enroll students or enroll all students at once."
+        }),
+    )
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
         return form
 
     def save_model(self, request, obj, form, change):
-        # save course first
+        # Save course first
         super().save_model(request, obj, form, change)
 
-        # handle enroll all or manual selection
+        # Handle student enrollment
         try:
             enroll_all = form.cleaned_data.get("enroll_all")
             selected = form.cleaned_data.get("students_to_add") or []
@@ -125,11 +140,20 @@ class CourseAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.annotate(_lesson_count=Count("lessons"))
+        return qs.annotate(
+            _lesson_count=Count("lessons", distinct=True),
+            _student_count=Count("enrollments", distinct=True)
+        )
 
     def lesson_count(self, obj):
         return getattr(obj, "_lesson_count", obj.lessons.count())
     lesson_count.short_description = "Lessons"
+    lesson_count.admin_order_field = "_lesson_count"
+
+    def student_count(self, obj):
+        return getattr(obj, "_student_count", obj.enrollments.count())
+    student_count.short_description = "Students"
+    student_count.admin_order_field = "_student_count"
 
 class LessonAdmin(admin.ModelAdmin):
     list_display = ("title", "course", "position", "is_done")
@@ -140,7 +164,87 @@ class LessonAdmin(admin.ModelAdmin):
     ordering = ("course", "position")
     inlines = [ChecklistInline]
 
+class StudentEnrollmentAdmin(admin.ModelAdmin):
+    list_display = ("student", "course", "enrolled_at")
+    search_fields = ("student__username", "student__first_name", "student__last_name", "course__title")
+    list_filter = ("enrolled_at", "course")
+    list_select_related = ("student", "course")
+    readonly_fields = ("enrolled_at",)
+    list_per_page = 25  # Pagination
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "student":
+            try:
+                kwargs["queryset"] = Group.objects.get(name="Students").user_set.all()
+            except Group.DoesNotExist:
+                kwargs["queryset"] = User.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+class TeacherAssignedAdmin(admin.ModelAdmin):
+    """
+    Admin view to see all courses assigned to teachers
+    """
+    list_display = ("course_title", "teacher_name", "student_count", "lesson_count", "created")
+    search_fields = ("title", "description", "teacher__username", "teacher__first_name", "teacher__last_name")
+    list_filter = ("teacher", "created")
+    list_select_related = ("teacher",)
+    list_per_page = 25  # Pagination
+    ordering = ("-created",)
+    
+    def has_add_permission(self, request):
+        # No adding from this view - use Course admin
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        # No deleting from this view - use Course admin
+        return False
+    
+    def get_queryset(self, request):
+        qs = Course.objects.filter(teacher__isnull=False).annotate(
+            _lesson_count=Count("lessons", distinct=True),
+            _student_count=Count("enrollments", distinct=True)
+        )
+        return qs
+    
+    def course_title(self, obj):
+        return obj.title
+    course_title.short_description = "Course"
+    course_title.admin_order_field = "title"
+    
+    def teacher_name(self, obj):
+        if obj.teacher:
+            return f"{obj.teacher.get_full_name() or obj.teacher.username}"
+        return "-"
+    teacher_name.short_description = "Teacher"
+    teacher_name.admin_order_field = "teacher__username"
+    
+    def student_count(self, obj):
+        return getattr(obj, "_student_count", 0)
+    student_count.short_description = "Students"
+    student_count.admin_order_field = "_student_count"
+    
+    def lesson_count(self, obj):
+        return getattr(obj, "_lesson_count", 0)
+    lesson_count.short_description = "Lessons"
+    lesson_count.admin_order_field = "_lesson_count"
+
+# Register models
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(LessonChecklistItem)
-admin.site.register(Enrollment)
+
+# Register with custom names
+class EnrollmentAdminProxy(Enrollment):
+    class Meta:
+        proxy = True
+        verbose_name = "Student Enrollment"
+        verbose_name_plural = "Student Enrollments"
+
+class TeacherAssignedProxy(Course):
+    class Meta:
+        proxy = True
+        verbose_name = "Teacher Assignment"
+        verbose_name_plural = "Teacher Assigned"
+
+admin.site.register(EnrollmentAdminProxy, StudentEnrollmentAdmin)
+admin.site.register(TeacherAssignedProxy, TeacherAssignedAdmin)
