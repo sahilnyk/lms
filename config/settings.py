@@ -39,7 +39,7 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'django.contrib.contenttypes',      
-    # 'grappelli.dashboard',              
+    'grappelli.dashboard',              
     'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -161,7 +161,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'qncmoohopmitlpiu')
 DEFAULT_FROM_EMAIL = 'EduFlow LMS <sahilnayak2056@gmail.com>'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
+GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomDashboard'
 GRAPPELLI_ADMIN_TITLE = "EduFlow-lms"
 GRAPPELLI_CLEAN_INPUT_TYPES = True
 
