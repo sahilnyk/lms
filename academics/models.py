@@ -2,10 +2,11 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Count, Q, Avg
 from decimal import Decimal
+from ckeditor.fields import RichTextField
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = RichTextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     start_date = models.DateField(null=True, blank=True, verbose_name="Start Date")
     end_date = models.DateField(null=True, blank=True, verbose_name="End Date")
@@ -74,7 +75,7 @@ class Course(models.Model):
 class Lesson(models.Model):
     course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    content = models.TextField(blank=True)
+    content = RichTextField(blank=True)
     position = models.PositiveSmallIntegerField("Position", null=True, blank=True)
     is_done = models.BooleanField(default=False)
     scheduled_date = models.DateField(null=True, blank=True, verbose_name="Scheduled Date")

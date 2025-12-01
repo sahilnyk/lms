@@ -18,17 +18,15 @@ class LessonProgressInline(admin.TabularInline):
 
 class LessonInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     model = Lesson
-    fields = ("position", "title", "is_done", "scheduled_date")
+    fields = ("title", "is_done", "position")
     extra = 1
     sortable_field_name = "position"
-    ordering = ["position"]
 
 class ChecklistInline(GrappelliSortableHiddenMixin, admin.TabularInline):
     model = LessonChecklistItem
-    fields = ("position", "text", "completed")
+    fields = ("text", "completed", "position")
     extra = 1
     sortable_field_name = "position"
-    ordering = ["position"]
 
 class EnrollmentInline(admin.TabularInline):
     model = Enrollment
@@ -78,11 +76,19 @@ class HasLessonsFilter(admin.SimpleListFilter):
         return queryset
 
 class CourseAdminForm(forms.ModelForm):
+    teachers_to_assign = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        widget=admin.widgets.FilteredSelectMultiple("Teachers", is_stacked=False),
+        label="Teachers (assign using dual-list)",
+        help_text="Select teachers to assign to this course. The first selected teacher will be set as the primary teacher."
+    )
+    
     students_to_add = forms.ModelMultipleChoiceField(
         queryset=User.objects.none(),
         required=False,
-        label="Students to add (manual select)",
         widget=admin.widgets.FilteredSelectMultiple("Students", is_stacked=False),
+        label="Students to add (manual select)",
         help_text="Pick specific students to enroll in this course."
     )
     enroll_all = forms.BooleanField(
@@ -102,9 +108,11 @@ class CourseAdminForm(forms.ModelForm):
             teachers_qs = Group.objects.get(name="Teachers").user_set.all()
         except Group.DoesNotExist:
             teachers_qs = User.objects.all()
-        self.fields["teacher"].queryset = teachers_qs
-        self.fields["teacher"].label = "Assign Teacher"
-        self.fields["teacher"].help_text = "Select a teacher from the Teachers group to assign to this course."
+        self.fields["teachers_to_assign"].queryset = teachers_qs
+        
+        # Pre-populate if teacher already assigned
+        if self.instance.pk and self.instance.teacher:
+            self.fields["teachers_to_assign"].initial = [self.instance.teacher.pk]
 
         try:
             students_qs = Group.objects.get(name="Students").user_set.all()
@@ -118,7 +126,7 @@ class CourseAdmin(admin.ModelAdmin):
     search_fields = ("title", "description", "teacher__username", "teacher__first_name", "teacher__last_name")
     list_filter = (HasLessonsFilter, "created", "teacher", "start_date", "end_date")
     list_per_page = 10
-    ordering = ("title",)
+    ordering = ("-created",)
     inlines = [LessonInline, EnrollmentInline]
     
     fieldsets = (
@@ -129,7 +137,7 @@ class CourseAdmin(admin.ModelAdmin):
             "fields": ("start_date", "end_date"),
         }),
         ("Teacher Assignment", {
-            "fields": ("teacher",),
+            "fields": ("teachers_to_assign",),
         }),
         ("Student Enrollment", {
             "fields": ("students_to_add", "enroll_all"),
@@ -138,8 +146,15 @@ class CourseAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
+        # Handle teacher assignment
+        teachers_to_assign = form.cleaned_data.get("teachers_to_assign")
+        if teachers_to_assign:
+            # Set first selected teacher as primary teacher
+            obj.teacher = teachers_to_assign[0]
+        
         super().save_model(request, obj, form, change)
 
+        # Handle student enrollment
         try:
             enroll_all = form.cleaned_data.get("enroll_all")
             selected = form.cleaned_data.get("students_to_add") or []
@@ -197,21 +212,23 @@ class CourseAdmin(admin.ModelAdmin):
     avg_completion.short_description = "Avg Progress"
 
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("position", "title", "course", "is_done", "scheduled_date", "completion_rate")
-    list_editable = ("is_done",)
+    list_display = ("title", "course", "scheduled_date", "position", "is_done", "completion_rate")
     search_fields = ("title", "content", "course__title")
     list_filter = ("course", "is_done", "scheduled_date")
     list_select_related = ("course",)
-    list_per_page = 50
-    ordering = ("course__title", "position")
+    list_per_page = 10
+    ordering = ("course", "position")
     inlines = [ChecklistInline]
     
     fieldsets = (
         ("Lesson Information", {
-            "fields": ("course", "title", "content", "position"),
+            "fields": ("course", "title", "content"),
         }),
-        ("Status & Schedule", {
-            "fields": ("is_done", "scheduled_date"),
+        ("Scheduling", {
+            "fields": ("scheduled_date", "position"),
+        }),
+        ("Status", {
+            "fields": ("is_done",),
         }),
     )
 
@@ -239,35 +256,49 @@ class LessonAdmin(admin.ModelAdmin):
             color, completed, total_enrolled, str(percentage) + '%'
         )
     completion_rate.short_description = "Completion"
-    
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "course":
-            kwargs["queryset"] = Course.objects.all().order_by('title')
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class LessonChecklistForm(forms.ModelForm):
+    course = forms.ModelChoiceField(
+        queryset=Course.objects.all(),
+        required=False,
+        label="Course (optional)",
+        help_text="Select a course to filter lessons. If selected, only lessons from this course will appear in the lesson dropdown."
+    )
+    
     class Meta:
         model = LessonChecklistItem
         fields = "__all__"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['lesson'].queryset = Lesson.objects.select_related('course').order_by('course__title', 'position')
-        self.fields['lesson'].label_from_instance = lambda obj: f"{obj.course.title} - {obj.title}"
+        
+        if self.instance.pk and self.instance.lesson:
+            self.fields['course'].initial = self.instance.lesson.course
+        
+        if 'course' in self.data:
+            try:
+                course_id = int(self.data.get('course'))
+                self.fields['lesson'].queryset = Lesson.objects.filter(course_id=course_id).order_by('position')
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.lesson:
+            self.fields['lesson'].queryset = Lesson.objects.filter(course=self.instance.lesson.course).order_by('position')
 
 class LessonChecklistAdmin(admin.ModelAdmin):
     form = LessonChecklistForm
-    list_display = ("position", "text", "lesson", "course_name", "completed")
-    list_editable = ("completed",)
+    list_display = ("text", "lesson", "course_name", "completed", "position")
     search_fields = ("text", "lesson__title", "lesson__course__title")
     list_filter = ("completed", "lesson__course")
     list_select_related = ("lesson", "lesson__course")
-    list_per_page = 50
-    ordering = ("lesson__course__title", "lesson__position", "position")
+    list_per_page = 25
+    ordering = ("lesson__course", "lesson__position", "position")
     
     fieldsets = (
         ("Checklist Item Information", {
-            "fields": ("lesson", "text", "position", "completed"),
+            "fields": ("course", "lesson", "text", "completed"),
+        }),
+        ("Ordering", {
+            "fields": ("position",),
         }),
     )
     
@@ -282,8 +313,7 @@ class StudentEnrollmentAdmin(admin.ModelAdmin):
     list_filter = ("completed", "enrolled_at", "course")
     list_select_related = ("student", "course")
     readonly_fields = ("enrolled_at", "progress_bar", "completed_at")
-    list_per_page = 50
-    ordering = ("course__title", "student__username")
+    list_per_page = 25
     
     fieldsets = (
         ("Enrollment Information", {
@@ -325,6 +355,32 @@ class StudentEnrollmentAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class LessonProgressForm(forms.ModelForm):
+    course = forms.ModelChoiceField(
+        queryset=Course.objects.all(),
+        required=False,
+        label="Course (optional)",
+        help_text="Select a course to filter lessons and students."
+    )
+    
+    students_to_add = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        label="Students (manual select)",
+        help_text="Select specific students to track progress."
+    )
+    
+    add_all_students = forms.BooleanField(
+        required=False,
+        label="Add all enrolled students",
+        help_text="Automatically add all students enrolled in the selected course."
+    )
+    
+    mark_all_complete = forms.BooleanField(
+        required=False,
+        label="Mark all lessons complete",
+        help_text="Mark all lessons in the selected course as complete for the selected students."
+    )
+    
     class Meta:
         model = LessonProgress
         fields = "__all__"
@@ -332,14 +388,25 @@ class LessonProgressForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.fields['lesson'].queryset = Lesson.objects.select_related('course').order_by('course__title', 'position')
-        self.fields['lesson'].label_from_instance = lambda obj: f"{obj.course.title} - {obj.title}"
+        if self.instance.pk and self.instance.lesson:
+            self.fields['course'].initial = self.instance.lesson.course
         
         try:
             students_qs = Group.objects.get(name="Students").user_set.all()
         except Group.DoesNotExist:
             students_qs = User.objects.all()
-        self.fields['student'].queryset = students_qs
+        self.fields['students_to_add'].queryset = students_qs
+        
+        if 'course' in self.data:
+            try:
+                course_id = int(self.data.get('course'))
+                self.fields['lesson'].queryset = Lesson.objects.filter(course_id=course_id).order_by('position')
+                self.fields['student'].queryset = User.objects.filter(enrollments__course_id=course_id).distinct()
+                self.fields['students_to_add'].queryset = User.objects.filter(enrollments__course_id=course_id).distinct()
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.lesson:
+            self.fields['lesson'].queryset = Lesson.objects.filter(course=self.instance.lesson.course).order_by('position')
 
 class LessonProgressAdmin(admin.ModelAdmin):
     form = LessonProgressForm
@@ -349,17 +416,55 @@ class LessonProgressAdmin(admin.ModelAdmin):
     list_select_related = ("student", "lesson", "lesson__course")
     readonly_fields = ("completed_at", "last_accessed")
     list_per_page = 50
-    ordering = ("lesson__course__title", "lesson__position", "student__username")
     
     fieldsets = (
-        ("Progress Tracking", {
-            "fields": ("student", "lesson", "completed"),
+        ("Progress Tracking Setup", {
+            "fields": ("course",),
+        }),
+        ("Student Selection", {
+            "fields": ("student", "students_to_add", "add_all_students"),
+        }),
+        ("Lesson & Completion", {
+            "fields": ("lesson", "completed", "mark_all_complete"),
         }),
         ("Timestamps", {
             "fields": ("completed_at", "last_accessed"),
             "classes": ("collapse",),
         }),
     )
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        
+        add_all = form.cleaned_data.get('add_all_students', False)
+        mark_all = form.cleaned_data.get('mark_all_complete', False)
+        selected_students = form.cleaned_data.get('students_to_add', [])
+        course = form.cleaned_data.get('course')
+        
+        students_to_process = []
+        
+        if add_all and obj.lesson:
+            students_to_process = list(obj.lesson.course.students.all())
+        elif selected_students:
+            students_to_process = list(selected_students)
+        
+        if students_to_process and obj.lesson:
+            if mark_all:
+                course_to_use = course or obj.lesson.course
+                for student in students_to_process:
+                    for lesson in course_to_use.lessons.all():
+                        LessonProgress.objects.update_or_create(
+                            student=student,
+                            lesson=lesson,
+                            defaults={'completed': True}
+                        )
+            else:
+                for student in students_to_process:
+                    LessonProgress.objects.get_or_create(
+                        student=student,
+                        lesson=obj.lesson,
+                        defaults={'completed': obj.completed}
+                    )
     
     def course_name(self, obj):
         return obj.lesson.course.title
@@ -378,7 +483,7 @@ class TeacherAssignedAdmin(admin.ModelAdmin):
     list_filter = ("teacher", "created", "start_date", "end_date")
     list_select_related = ("teacher",)
     list_per_page = 25
-    ordering = ("title",)
+    ordering = ("-created",)
     
     def has_add_permission(self, request):
         return False

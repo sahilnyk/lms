@@ -6,3 +6,6 @@ class AcademicsConfig(AppConfig):
     name = 'academics'
     verbose_name = "Academics"
 
+    def ready(self):
+        import academics.signals
+

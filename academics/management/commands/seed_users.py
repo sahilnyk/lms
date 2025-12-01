@@ -11,7 +11,7 @@ def clean_part(s):
     return re.sub(r'[^a-z0-9]', '', s.lower())
 
 class Command(BaseCommand):
-    help = "Create teacher and student users with Indian names and name-based usernames/emails (no 'teacher'/'student' prefixes)."
+    help = "Create teacher and student users with Indian names and fake emails"
 
     def add_arguments(self, parser):
         parser.add_argument("--teachers", type=int, default=10, help="Number of teacher users to create")
@@ -37,7 +37,8 @@ class Command(BaseCommand):
                 User.objects.filter(pk__in=pks).delete()
             self.stdout.write(f"Cleared {count} users from Teachers/Students groups")
 
-        domains = ["gmail.com", "yahoo.in", "outlook.com", "hotmail.com"]
+        # Fake email domains (not real)
+        domains = ["example.com", "test.local", "demo.edu", "sample.org"]
 
         def make_unique_email(base, domain):
             email = f"{base}@{domain}"

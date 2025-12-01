@@ -48,8 +48,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'phonenumber_field',
     'simple_history',
+    'django_celery_beat',
+    'rest_framework',
     'academics.apps.AcademicsConfig',
-
+    'timetable.apps.TimetableConfig',
+    'notifications.apps.NotificationsConfig',
+    'ckeditor',
+    'ckeditor_uploader',
 ]
 
 
@@ -122,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -142,8 +147,19 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email settings (for notifications)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'sahilnayak2056@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'qncmoohopmitlpiu')
+DEFAULT_FROM_EMAIL = 'EduFlow LMS <sahilnayak2056@gmail.com>'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # GRAPPELLI_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
 GRAPPELLI_ADMIN_TITLE = "EduFlow-lms"
@@ -152,4 +168,30 @@ GRAPPELLI_CLEAN_INPUT_TYPES = True
 CSRF_TRUSTED_ORIGINS = [
     "https://0bc991a1af13.ngrok-free.app",
 ]
+
+# Celery Configuration (for notifications)
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# REST Framework (for notification API)
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# CKEditor Configuration
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_IMAGE_BACKEND = "pillow"
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 400,
+        'width': '100%',
+    },
+}
 
