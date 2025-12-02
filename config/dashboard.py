@@ -10,7 +10,7 @@ class CustomDashboard(Dashboard):
     
     def __init__(self, **kwargs):
         Dashboard.__init__(self, **kwargs)
-        self.title = _('EduFlow LMS Dashboard')
+        self.title = _('EduFlow Dashboard')
         
         # Column 1 - Academic Management
         self.children.append(modules.AppList(
@@ -86,14 +86,14 @@ class CustomDashboard(Dashboard):
         self.children.append(modules.RecentActions(
             title=_('Recent Actions'),
             column=2,
-            collapsible=False,
+            collapsible=True,
             limit=10,
         ))
         
         # Column 3 - Links
         self.children.append(modules.LinkList(
             title=_('Quick Links'),
-            column=3,
+            column=1,
             collapsible=True,
             children=[
                 {

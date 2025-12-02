@@ -1,38 +1,17 @@
 {% extends "admin/base.html" %}
 {% load static i18n grp_tags log %}
 
+{% block content_title %}
+{% if title %}
+    <header id="grp-content-title">
+        <h1>{% if request.path == '/admin/' %}EduFlow Dashboard{% else %}{{ title }}{% endif %}</h1>
+    </header>
+{% endif %}
+{% endblock %}
+
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'css/custom_admin.css' %}?v=20251004">
-    <style>
-      /* Dashboard width fix - inline CSS */
-      .narrow-module {
-          box-sizing: border-box !important;
-          max-width: 360px !important;
-          flex: 0 0 360px !important;
-          min-width: 300px;
-          margin-right: 20px;
-      }
-      .grp-group.narrow-module {
-          box-sizing: border-box !important;
-          max-width: 360px !important;
-          flex: 0 0 360px !important;
-          background: transparent;
-          border: none;
-          padding: 0;
-      }
-      .grp-group.narrow-module .grp-module,
-      .narrow-module .grp-module {
-          width: 100%;
-          box-sizing: border-box;
-      }
-      @media (max-width: 900px) {
-          .narrow-module, .grp-group.narrow-module {
-              max-width: 100% !important;
-              flex: 0 0 100% !important;
-          }
-      }
-    </style>
 {% endblock %}
 
 {% block footer %}
@@ -40,6 +19,10 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         var tools = document.getElementById('grp-user-tools');
+        var header = document.querySelector('#grp-content-title h1');
+        if (header && window.location.pathname === '/admin/') {
+            header.textContent = 'EduFlow Dashboard';
+        }
     });
     </script>
 {% endblock %}
