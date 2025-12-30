@@ -1,0 +1,53 @@
+{% extends 'accounts/base_auth.html' %}
+{% block content %}
+
+<div class="heading">Welcome</div>
+<div class="sub">Put your organisation slug</div>
+
+<div id="err" class="form-error" style="display:none"></div>
+
+<div class="label">Organisation slug</div>
+
+<div class="input-wrapper">
+  <i class="fa-solid fa-building"></i>
+  <input id="slugBox" placeholder="example: bgu"
+         oninput="document.getElementById('err').style.display='none'">
+</div>
+
+<button class="button" onclick="goLogin()">Continue</button>
+
+<div class="register">
+  New user? no worries
+  <a onclick="goRegister()">register yourself here</a>
+  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+</div>
+
+<script>
+async function goLogin(){
+  const slug = document.getElementById("slugBox").value.trim();
+  const err = document.getElementById("err");
+
+  if(!slug){
+    err.innerText = "organisation slug is required";
+    err.style.display = "block";
+    return;
+  }
+
+  const res = await fetch(`/check-org/${slug}/`);
+  const data = await res.json();
+
+  if(!data.exists){
+    err.innerText = "no organisation found. contact admin";
+    err.style.display = "block";
+    return;
+  }
+
+  window.location.href = `/${slug}/login/`;
+}
+
+function goRegister(){
+  window.location.href = "/register/selector/";
+}
+</script>
+
+{% endblock %}

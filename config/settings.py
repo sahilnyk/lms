@@ -50,13 +50,17 @@ INSTALLED_APPS = [
     'simple_history',
     'django_celery_beat',
     'rest_framework',
+    'tenancy',
+    'accounts',
     'academics.apps.AcademicsConfig',
     'timetable.apps.TimetableConfig',
     'notifications.apps.NotificationsConfig',
     'ckeditor',
     'ckeditor_uploader',
+    'schedule',
 ]
 
+AUTH_USER_MODEL = "accounts.User"
 
 # settings.py
 

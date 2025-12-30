@@ -18,12 +18,14 @@ django-grappelli==4.0.2
 django-js-asset==3.1.2
 django-otp==1.6.1
 django-phonenumber-field==8.1.0
+django-scheduler==0.10.1
 django-simple-history==3.10.1
 django-timezone-field==7.1
 django-two-factor-auth==1.17.0
 djangorestframework==3.16.1
 Faker==37.8.0
 gunicorn==23.0.0
+icalendar==6.3.2
 kombu==5.5.4
 packaging==25.0
 phonenumbers==9.0.13
@@ -35,6 +37,7 @@ pycryptodome==3.23.0
 pypng==0.20220715.0
 python-crontab==3.3.0
 python-dateutil==2.9.0.post0
+pytz==2025.2
 qrcode==7.4.2
 redis==7.1.0
 six==1.17.0

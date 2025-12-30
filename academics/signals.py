@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.conf import settings
 from .models import Enrollment, Course
 
 
@@ -21,13 +22,12 @@ def send_welcome_notification(sender, instance, created, **kwargs):
                 }
             )
             
-            # Create notification schedule (send immediately)
             ct = ContentType.objects.get_for_model(Enrollment)
             schedule = NotificationSchedule.objects.create(
                 content_type=ct,
                 object_id=instance.pk,
                 template=template,
-                scheduled_for=timezone.now(),  # Send now
+                scheduled_for=timezone.now(),
                 context={
                     'student': instance.student.get_full_name() or instance.student.username,
                     'course': instance.course.title,
@@ -38,6 +38,58 @@ def send_welcome_notification(sender, instance, created, **kwargs):
             
         except ImportError:
             pass
+
+
+@receiver(post_save, sender=Enrollment)
+def enrollment_notify_teacher(sender, instance, created, **kwargs):
+    """Notify teacher when a new student enrolls in their course"""
+    if not created:
+        return
+
+    course = getattr(instance, "course", None)
+    if not course:
+        return
+
+    teachers = []
+    teacher = getattr(course, "teacher", None)
+    if teacher:
+        teachers = [teacher]
+    else:
+        try:
+            teachers_qs = getattr(course, "teachers", None)
+            if teachers_qs is not None:
+                teachers = list(teachers_qs.all())
+        except Exception:
+            teachers = []
+
+    recipient_emails = [t.email for t in teachers if getattr(t, "email", None)]
+
+    if not recipient_emails:
+        return
+
+    subject = f"New student enrolled in {course.title}"
+    title = "Student Enrolled"
+    student_name = instance.student.get_full_name() if instance.student else 'A student'
+    message = f"{student_name} has been added to {course.title}."
+
+    action_url = None
+    try:
+        from django.urls import reverse
+        base_url = getattr(settings, "SITE_BASE_URL", "http://localhost:8000")
+        action_url = base_url.rstrip("/") + reverse("admin:academics_enrollment_change", args=[instance.pk])
+    except Exception:
+        action_url = None
+
+    from notifications.tasks import send_notification_task
+    send_notification_task.delay(
+        subject,
+        title,
+        message,
+        recipient_emails,
+        course={"id": course.pk, "title": course.title},
+        action_url=action_url,
+        action_text="View Enrollment"
+    )
 
 
 @receiver(post_save, sender=Course)

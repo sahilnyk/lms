@@ -68,10 +68,7 @@ class TimetableNotification(models.Model):
     def __str__(self):
         return f"{self.notification_type} - {self.timetable_entry}"
 
-
-# ADD THIS NEW MODEL
 class ClassSession(models.Model):
-    """Scheduled class with automatic notifications"""
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='class_sessions')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='class_sessions', null=True, blank=True)
     title = models.CharField(max_length=200, blank=True)
@@ -94,47 +91,48 @@ class ClassSession(models.Model):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        
+
+    def get_recipient_user_pks(self):
+        try:
+            return list(self.course.enrollments.values_list('student_id', flat=True))
+        except Exception:
+            return []
+
+    def schedule_notifications(self):
         try:
             from notifications.models import NotificationSchedule, NotificationTemplate
             from django.contrib.contenttypes.models import ContentType
-            
-            scheduled_for = self.start_at - timedelta(minutes=self.notify_before_minutes)
-            
-            template, _ = NotificationTemplate.objects.get_or_create(
-                name='upcoming_class',
+        except Exception:
+            return
+
+        scheduled_for = self.start_at - timedelta(minutes=self.notify_before_minutes)
+        template, _ = NotificationTemplate.objects.get_or_create(
+            name='upcoming_class',
+            defaults={
+                'subject': 'Upcoming Class: {course}',
+                'body': 'Your class "{lesson}" for {course} starts at {start_at}. Duration: {duration} minutes.',
+                'channels': ['email']
+            }
+        )
+        context = {
+            'course': getattr(self.course, 'title', ''),
+            'lesson': getattr(self.lesson, 'title', '') or (self.title or 'General Session'),
+            'start_at': self.start_at.isoformat(),
+            'duration': self.duration_minutes,
+        }
+        ct = ContentType.objects.get_for_model(self.__class__)
+        if self.active:
+            schedule, _ = NotificationSchedule.objects.update_or_create(
+                content_type=ct,
+                object_id=self.pk,
                 defaults={
-                    'subject': 'Upcoming Class: {course}',
-                    'body': 'Your class "{lesson}" for {course} starts at {start_at}. Duration: {duration} minutes.',
-                    'channels': ['email']
+                    'template': template,
+                    'scheduled_for': scheduled_for,
+                    'context': context,
+                    'sent': False,
                 }
             )
-            
-            recipients = self.course.enrollments.values_list('student', flat=True)
-            
-            context = {
-                'course': self.course.title,
-                'lesson': self.lesson.title if self.lesson else self.title or 'General Session',
-                'start_at': self.start_at.strftime('%Y-%m-%d %H:%M'),
-                'duration': self.duration_minutes,
-            }
-            
-            if self.active:
-                ct = ContentType.objects.get_for_model(self)
-                schedule, created = NotificationSchedule.objects.update_or_create(
-                    content_type=ct,
-                    object_id=self.pk,
-                    defaults={
-                        'template': template,
-                        'scheduled_for': scheduled_for,
-                        'context': context,
-                        'sent': False,
-                    }
-                )
-                schedule.recipients.set(recipients)
-            else:
-                ct = ContentType.objects.get_for_model(self)
-                NotificationSchedule.objects.filter(content_type=ct, object_id=self.pk).delete()
-        
-        except ImportError:
-            pass
+            recipient_pks = self.get_recipient_user_pks()
+            schedule.recipients.set(recipient_pks)
+        else:
+            NotificationSchedule.objects.filter(content_type=ct, object_id=self.pk).delete()

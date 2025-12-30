@@ -1,0 +1,122 @@
+{% extends 'accounts/base_auth.html' %}
+{% block content %}
+
+<style>
+.tabs{
+ display:flex;
+ justify-content:space-between;
+ margin-top:10px;
+ background:#f3f4f6;
+ padding:4px;
+ border-radius:6px;
+}
+
+.tab{
+ width:33.33%;
+ text-align:center;
+ padding:8px 0;
+ font-size:12px;
+ cursor:pointer;
+ border-radius:5px;
+ color:#4b5563;
+ font-weight:600;
+}
+
+.tab.active{
+ background:white;
+ border:1px solid #cbd5e1;
+ color:#111827;
+}
+
+.info-box{
+ margin-top:15px;
+ background:#f8fafc;
+ border:1px solid #e5e7eb;
+ padding:12px;
+ border-radius:6px;
+ font-size:12px;
+}
+
+.info-title{
+ font-weight:700;
+ margin-bottom:4px;
+ color:#111827;
+}
+
+.info-text{
+ color:#4b5563;
+ line-height:18px;
+}
+
+.icon{
+ font-size:18px;
+ margin-bottom:5px;
+ color:#1f3fd6;
+}
+
+</style>
+
+<div class="heading">Registration</div>
+<div class="sub">Choose who you are</div>
+
+<div class="tabs">
+ <div class="tab active" id="orgTab" onclick="showTab('org')">Organisation</div>
+ <div class="tab" id="studentTab" onclick="showTab('student')">Student</div>
+ <div class="tab" id="teacherTab" onclick="showTab('teacher')">Teacher</div>
+</div>
+
+<div class="info-box">
+ <div id="orgBox">
+  <div class="icon"><i class="fa-solid fa-building"></i></div>
+  <div class="info-title">Register your organisation</div>
+  <div class="info-text">
+   If you are a college, school, institute or academy owner and want to create a digital workspace for students and teachers, start here.
+  </div>
+  <button class="button" onclick="window.location.href='/register/organisation/'">Continue</button>
+ </div>
+
+ <div id="studentBox" style="display:none">
+  <div class="icon"><i class="fa-solid fa-user-graduate"></i></div>
+  <div class="info-title">Student Registration</div>
+  <div class="info-text">
+   Join your learning platform under your organisation. You will need your organisation slug provided by your institute.
+  </div>
+  <button class="button" onclick="window.location.href='/dummy/student'">Continue</button>
+ </div>
+
+ <div id="teacherBox" style="display:none">
+  <div class="icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+  <div class="info-title">Teacher Registration</div>
+  <div class="info-text">
+   Join as a teacher and manage classes, assignments and students. Approval will be required from your organisation admin.
+  </div>
+  <button class="button" onclick="window.location.href='/dummy/teacher'">Continue</button>
+ </div>
+</div>
+
+<script>
+function showTab(type){
+ document.getElementById("orgTab").classList.remove("active")
+ document.getElementById("studentTab").classList.remove("active")
+ document.getElementById("teacherTab").classList.remove("active")
+
+ document.getElementById("orgBox").style.display="none"
+ document.getElementById("studentBox").style.display="none"
+ document.getElementById("teacherBox").style.display="none"
+
+ if(type==="org"){
+  document.getElementById("orgTab").classList.add("active")
+  document.getElementById("orgBox").style.display="block"
+ }
+ if(type==="student"){
+  document.getElementById("studentTab").classList.add("active")
+  document.getElementById("studentBox").style.display="block"
+ }
+ if(type==="teacher"){
+  document.getElementById("teacherTab").classList.add("active")
+  document.getElementById("teacherBox").style.display="block"
+ }
+}
+</script>
+
+{% endblock %}

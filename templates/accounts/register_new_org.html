@@ -1,0 +1,28 @@
+{% extends 'accounts/base_auth.html' %}
+{% block content %}
+<div class="heading">Organisation Admin Registration</div>
+<div class="sub">{{ org.name }}</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="label">Name</div>
+  <div class="input-wrapper">
+    <i class="fa-solid fa-user"></i>
+    <input name="name" placeholder="full name">
+  </div>
+
+  <div class="label" style="margin-top:10px">Email</div>
+  <div class="input-wrapper">
+    <i class="fa-solid fa-envelope"></i>
+    <input name="email" placeholder="email">
+  </div>
+
+  <div class="label" style="margin-top:10px">Password</div>
+  <div class="input-wrapper">
+    <i class="fa-solid fa-lock"></i>
+    <input type="password" name="password" placeholder="password">
+  </div>
+
+  <button class="button" type="submit">Register</button>
+</form>
+{% endblock %}

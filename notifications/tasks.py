@@ -1,6 +1,7 @@
 from celery import shared_task
 from django.utils import timezone
 from django.core.mail import send_mail, get_connection
+from django.template.loader import render_to_string
 from django.conf import settings
 from .models import NotificationSchedule, NotificationDelivery, NotificationPreference
 import logging
@@ -99,3 +100,77 @@ def send_notification(self, delivery_id, subject, message):
         delivery.error = str(exc)
         delivery.save(update_fields=['status', 'error'])
         raise self.retry(exc=exc, countdown=60)
+
+
+@shared_task(bind=True, ignore_result=True)
+def send_notification_task(self, subject: str, title: str, message: str,
+                           recipients: list, course: dict = None,
+                           action_url: str | None = None, action_text: str | None = "View"):
+    if not recipients:
+        return {"error": "no recipients"}
+
+    timestamp = timezone.now().isoformat()
+    context = {
+        "subject": subject,
+        "title": title,
+        "message": message,
+        "timestamp": timestamp,
+        "course": course or {},
+        "action_url": action_url,
+        "action_text": action_text,
+        "recipient": ", ".join(recipients),
+    }
+
+    try:
+        html = render_to_string("notifications/email/notification.html", context)
+    except Exception:
+        html = None
+
+    try:
+        text = render_to_string("notifications/email/notification.txt", context)
+    except Exception:
+        text = f"{title}\n\n{message}\n\nCourse: {course.get('title') if course else ''}\n\n{action_url or ''}"
+
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_FROM", None) or None
+
+    try:
+        connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=settings.EMAIL_HOST_USER,
+            password=settings.EMAIL_HOST_PASSWORD,
+            use_tls=settings.EMAIL_USE_TLS,
+            fail_silently=False,
+        )
+        
+        send_mail(
+            subject,
+            text,
+            from_email,
+            recipients,
+            html_message=html,
+            fail_silently=False,
+            connection=connection,
+        )
+        
+        connection.close()
+    except Exception as exc:
+        logger.error(f"send_notification_task failed: {str(exc)}")
+        return {"error": "send_failed", "detail": str(exc)}
+
+    for r in recipients:
+        try:
+            NotificationDelivery.objects.create(
+                recipient_id=None,
+                subject=subject,
+                body=message,
+                message=message,
+                channel='email',
+                status='sent',
+                sent_at=timezone.now(),
+            )
+        except Exception:
+            continue
+
+    return {"status": "sent", "recipients_count": len(recipients)}

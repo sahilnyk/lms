@@ -1,0 +1,42 @@
+.sprite {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url("/static/images/icons.png");
+    background-repeat: no-repeat;
+    vertical-align: middle;
+}
+
+/* Row 1 */
+.sprite-home {
+    background-position: 0px 0px;
+}
+
+.sprite-calendar {
+    background-position: -16px 0px;
+}
+
+.sprite-user {
+    background-position: -32px 0px;
+}
+
+.sprite-settings {
+    background-position: -48px 0px;
+}
+
+/* Row 2 */
+.sprite-bell {
+    background-position: 0px -16px;
+}
+
+.sprite-clock {
+    background-position: -16px -16px;
+}
+
+.sprite-mail {
+    background-position: -32px -16px;
+}
+
+.sprite-check {
+    background-position: -48px -16px;
+}
