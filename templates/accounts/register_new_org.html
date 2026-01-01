@@ -1,28 +1,85 @@
 {% extends 'accounts/base_auth.html' %}
 {% block content %}
-<div class="heading">Organisation Admin Registration</div>
-<div class="sub">{{ org.name }}</div>
+
+<div class="heading">Organisation Registration</div>
+<div class="sub">Create your learning platform</div>
+
+{% if form.errors %}
+<div class="form-error">
+ {% for field in form %}
+  {% for error in field.errors %}
+   {{ error }}
+  {% endfor %}
+ {% endfor %}
+ {% for error in form.non_field_errors %}
+  {{ error }}
+ {% endfor %}
+</div>
+{% endif %}
 
 <form method="post">
-  {% csrf_token %}
-  <div class="label">Name</div>
-  <div class="input-wrapper">
-    <i class="fa-solid fa-user"></i>
-    <input name="name" placeholder="full name">
-  </div>
+ {% csrf_token %}
 
-  <div class="label" style="margin-top:10px">Email</div>
-  <div class="input-wrapper">
-    <i class="fa-solid fa-envelope"></i>
-    <input name="email" placeholder="email">
-  </div>
+ <div class="label">Organisation Name</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-building"></i>
+  <input name="org_name" value="{{ form.org_name.value|default:'' }}" placeholder="e.g., ABC University" required>
+ </div>
 
-  <div class="label" style="margin-top:10px">Password</div>
-  <div class="input-wrapper">
-    <i class="fa-solid fa-lock"></i>
-    <input type="password" name="password" placeholder="password">
-  </div>
+ <div class="label" style="margin-top:10px">Organisation Slug</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-link"></i>
+  <input name="slug" value="{{ form.slug.value|default:'' }}" placeholder="e.g., abc-university" required>
+ </div>
 
-  <button class="button" type="submit">Register</button>
+ <div class="label" style="margin-top:10px">Admin Full Name</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-user"></i>
+  <input name="admin_name" value="{{ form.admin_name.value|default:'' }}" placeholder="full name" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Admin Email</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-envelope"></i>
+  <input name="email" type="email" value="{{ form.email.value|default:'' }}" placeholder="admin email" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Admin Password</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-lock"></i>
+  <input type="password" name="password" placeholder="password" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Organisation Address</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-location-dot"></i>
+  <input name="org_address" value="{{ form.org_address.value|default:'' }}" placeholder="organisation address" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Admin Address</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-location-dot"></i>
+  <input name="admin_address" value="{{ form.admin_address.value|default:'' }}" placeholder="admin address" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Organisation Size</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-users"></i>
+  <select name="org_size" required>
+    <option value="">Select organisation size</option>
+    <option value="1-50" {% if form.org_size.value == "1-50" %}selected{% endif %}>1-50 users</option>
+    <option value="51-200" {% if form.org_size.value == "51-200" %}selected{% endif %}>51-200 users</option>
+    <option value="201-500" {% if form.org_size.value == "201-500" %}selected{% endif %}>201-500 users</option>
+    <option value="500+" {% if form.org_size.value == "500+" %}selected{% endif %}>500+ users</option>
+  </select>
+ </div>
+
+ <button class="button" type="submit" style="margin-top:15px;">Create Organisation</button>
 </form>
+
+<div class="register">
+ Already have an account?
+ <a href="/">login here</a>
+</div>
+
 {% endblock %}

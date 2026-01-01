@@ -3,7 +3,13 @@ from django.http import Http404, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from tenancy.models import Organisation
 from .models import User, StudentProfile, TeacherProfile
-from .forms import OrganisationRegisterForm, LoginForm, SimpleUserForm
+from .forms import (
+    OrganisationRegisterForm, 
+    LoginForm, 
+    SimpleUserForm,
+    StudentRegisterForm,
+    TeacherRegisterForm
+)
 
 
 def platform_login_landing(request):
@@ -33,19 +39,19 @@ def tenant_login_view(request, slug):
         user = authenticate(request, username=email, password=password)
 
         if not user or user.organisation != org or not user.is_active:
-            return render(request, "accounts/login.html", {
+            return render(request, "accounts/tenant_login.html", {
                 "org": org,
                 "form": form,
-                "error": "invalid credentials"
+                "error": "Invalid credentials"
             })
 
         if user.role == "TEACHER":
             t = TeacherProfile.objects.filter(user=user).first()
             if t and not t.approved:
-                return render(request, "accounts/login.html", {
+                return render(request, "accounts/tenant_login.html", {
                     "org": org,
                     "form": form,
-                    "error": "teacher approval pending"
+                    "error": "Teacher approval pending"
                 })
 
         login(request, user)
@@ -56,11 +62,16 @@ def tenant_login_view(request, slug):
             return redirect(f"/{slug}/teacher/dashboard/")
         return redirect(f"/{slug}/student/dashboard/")
 
-    return render(request, "accounts/login.html", {"org": org, "form": form})
+    return render(request, "accounts/tenant_login.html", {"org": org, "form": form})
+
+
+def register_selector(request):
+    return render(request, "accounts/register_selector.html")
 
 
 def register_new_org(request):
     form = OrganisationRegisterForm(request.POST or None)
+    success = False
 
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
@@ -68,7 +79,9 @@ def register_new_org(request):
         org = Organisation.objects.create(
             name=data["org_name"],
             slug=data["slug"],
-            status="ACTIVE"
+            status="ACTIVE",
+            address=data["org_address"],
+            size=data["org_size"]
         )
 
         User.objects.create_user(
@@ -77,12 +90,18 @@ def register_new_org(request):
             name=data["admin_name"],
             organisation=org,
             role="ORG_ADMIN",
-            is_verified=True
+            is_verified=True,
+            address=data["admin_address"]
         )
 
-        return redirect("tenant_login", slug=data["slug"])
+        success = True
+        return render(request, "accounts/register_new_org.html", {
+            "form": OrganisationRegisterForm(),
+            "success": True,
+            "slug": data["slug"]
+        })
 
-    return render(request, "accounts/register_new_org.html", {"form": form})
+    return render(request, "accounts/register_new_org.html", {"form": form, "success": success})
 
 
 def register_org_admin(request, slug):
@@ -103,7 +122,80 @@ def register_org_admin(request, slug):
 
         return redirect("tenant_login", slug=slug)
 
-    return render(request, "accounts/register_org.html", {"org": org, "form": form})
+    return render(request, "accounts/register_org_admin.html", {"org": org, "form": form})
+
+
+def register_student_public(request):
+    form = StudentRegisterForm(request.POST or None)
+    success = False
+    org_name = None
+
+    if request.method == "POST" and form.is_valid():
+        data = form.cleaned_data
+        org = Organisation.objects.get(slug=data["slug"], status="ACTIVE")
+
+        user = User.objects.create_user(
+            email=data["email"],
+            password=data["password"],
+            name=data["name"],
+            organisation=org,
+            role="STUDENT",
+            is_verified=True,
+            phone=data["phone"],
+            address=data["address"]
+        )
+
+        StudentProfile.objects.create(
+            user=user,
+            organisation=org
+        )
+
+        success = True
+        org_name = org.name
+        form = StudentRegisterForm()
+
+    return render(request, "accounts/register_student_public.html", {
+        "form": form,
+        "success": success,
+        "org_name": org_name
+    })
+
+
+def register_teacher_public(request):
+    form = TeacherRegisterForm(request.POST or None)
+    success = False
+    org_name = None
+
+    if request.method == "POST" and form.is_valid():
+        data = form.cleaned_data
+        org = Organisation.objects.get(slug=data["slug"], status="ACTIVE")
+
+        user = User.objects.create_user(
+            email=data["email"],
+            password=data["password"],
+            name=data["name"],
+            organisation=org,
+            role="TEACHER",
+            is_verified=False,
+            phone=data["phone"],
+            address=data["address"]
+        )
+
+        TeacherProfile.objects.create(
+            user=user,
+            organisation=org,
+            approved=False
+        )
+
+        success = True
+        org_name = org.name
+        form = TeacherRegisterForm()
+
+    return render(request, "accounts/register_teacher_public.html", {
+        "form": form,
+        "success": success,
+        "org_name": org_name
+    })
 
 
 def register_student(request, slug):

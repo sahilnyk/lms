@@ -8,6 +8,8 @@ urlpatterns = [
 
     path('register/selector/', views.register_selector, name="register_selector"),
     path('register/organisation/', views.register_new_org, name="register_new_org"),
+    path('register/student/', views.register_student_public, name="register_student_public"),
+    path('register/teacher/', views.register_teacher_public, name="register_teacher_public"),
 
     path('<slug:slug>/login/', views.tenant_login_view, name='tenant_login'),
     path('<slug:slug>/register/org-admin/', views.register_org_admin, name='register_org_admin'),
