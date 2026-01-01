@@ -1,6 +1,10 @@
 {% extends 'accounts/base_auth.html' %}
 {% block content %}
 
+<a href="/register/selector/" style="display:inline-block;margin-bottom:15px;color:#2563eb;text-decoration:none;font-size:13px;">
+  <i class="fa-solid fa-arrow-left"></i> Back
+</a>
+
 <div class="heading">Organisation Registration</div>
 <div class="sub">Create your learning platform</div>
 
@@ -64,7 +68,6 @@
 
  <div class="label" style="margin-top:10px">Organisation Size</div>
  <div class="input-wrapper">
-  <i class="fa-solid fa-users"></i>
   <select name="org_size" required>
     <option value="">Select organisation size</option>
     <option value="1-50" {% if form.org_size.value == "1-50" %}selected{% endif %}>1-50 users</option>

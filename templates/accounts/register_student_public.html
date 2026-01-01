@@ -1,0 +1,79 @@
+{% extends 'accounts/base_auth.html' %}
+{% block content %}
+
+<a href="/register/selector/" style="display:inline-block;margin-bottom:15px;color:#2563eb;text-decoration:none;font-size:13px;">
+  <i class="fa-solid fa-arrow-left"></i> Back
+</a>
+
+<div class="heading">Student Registration</div>
+<div class="sub">Join your organisation</div>
+
+{% if success %}
+<div class="form-error" style="background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">
+ Registration successful! You can now login.
+</div>
+<button class="button" onclick="window.location.href='/'">Go to Login</button>
+{% else %}
+
+{% if form.errors %}
+<div class="form-error">
+ {% for field in form %}
+  {% for error in field.errors %}
+   {{ error }}
+  {% endfor %}
+ {% endfor %}
+ {% for error in form.non_field_errors %}
+  {{ error }}
+ {% endfor %}
+</div>
+{% endif %}
+
+<form method="post">
+ {% csrf_token %}
+
+ <div class="label">Organisation Slug</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-building"></i>
+  <input name="slug" value="{{ form.slug.value|default:'' }}" placeholder="e.g., abc-university" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">First Name</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-user"></i>
+  <input name="first_name" value="{{ form.first_name.value|default:'' }}" placeholder="First name" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Last Name</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-user"></i>
+  <input name="last_name" value="{{ form.last_name.value|default:'' }}" placeholder="Last name" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Email</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-envelope"></i>
+  <input name="email" type="email" value="{{ form.email.value|default:'' }}" placeholder="Email" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Phone Number</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-phone"></i>
+  <input name="phone" value="{{ form.phone.value|default:'' }}" placeholder="Phone number" required>
+ </div>
+
+ <div class="label" style="margin-top:10px">Address</div>
+ <div class="input-wrapper">
+  <i class="fa-solid fa-location-dot"></i>
+  <input name="address" value="{{ form.address.value|default:'' }}" placeholder="Address" required>
+ </div>
+
+ <button class="button" type="submit" style="margin-top:15px;">Register</button>
+</form>
+
+<div class="register">
+ Already have an account?
+ <a href="/">login here</a>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -62,7 +62,11 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "accounts.User"
 
-# settings.py
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "70ae30e38d1c.ngrok-free.app", 
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
