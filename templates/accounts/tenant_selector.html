@@ -1,25 +1,29 @@
 {% extends 'accounts/base_auth.html' %}
 {% block content %}
 
-<div class="heading">Welcome</div>
-<div class="sub">Put your organisation slug</div>
+<div class="auth-header">
+  <div class="heading">Enter Organisation</div>
+  <div class="sub">Enter your organisation slug to continue</div>
+</div>
 
 <div id="err" class="form-error" style="display:none"></div>
 
-<div class="label">Organisation slug</div>
+<form onsubmit="event.preventDefault(); goLogin();">
+  <div class="label">Organisation Slug</div>
+  <div class="input-wrapper">
+    <i class="fa-solid fa-building"></i>
+    <input id="slugBox" 
+           placeholder="e.g., abc-university" 
+           oninput="document.getElementById('err').style.display='none'"
+           autocomplete="off"
+           required>
+  </div>
 
-<div class="input-wrapper">
-  <i class="fa-solid fa-building"></i>
-  <input id="slugBox" placeholder="example: bgu"
-         oninput="document.getElementById('err').style.display='none'">
-</div>
+  <button class="button" type="submit">Continue</button>
+</form>
 
-<button class="button" onclick="goLogin()">Continue</button>
-
-<div class="register">
-  New user? no worries
-  <a onclick="goRegister()">register yourself here</a>
-  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+<div class="auth-footer">
+  New user? <a href="{% url 'register_selector' %}">Register here</a>
 </div>
 
 <script>
@@ -28,7 +32,7 @@ async function goLogin(){
   const err = document.getElementById("err");
 
   if(!slug){
-    err.innerText = "organisation slug is required";
+    err.innerText = "Organisation slug is required";
     err.style.display = "block";
     return;
   }
@@ -37,16 +41,12 @@ async function goLogin(){
   const data = await res.json();
 
   if(!data.exists){
-    err.innerText = "no organisation found. contact admin";
+    err.innerText = "Organisation not found. Please check your slug or contact your administrator.";
     err.style.display = "block";
     return;
   }
 
-  window.location.href = `/${slug}/login/`;
-}
-
-function goRegister(){
-  window.location.href = "/register/selector/";
+  window.location.href = `/${slug}/role/`;
 }
 </script>
 
