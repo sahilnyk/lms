@@ -3,13 +3,28 @@ from tenancy.models import Organisation
 from .models import User
 
 
-class TenantSlugForm(forms.Form):
-    slug = forms.CharField(max_length=50)
+class OrganisationSlugForm(forms.Form):
+    slug = forms.SlugField(max_length=50, label="Organisation Slug")
+
+    def clean_slug(self):
+        slug = self.cleaned_data["slug"]
+        if not Organisation.objects.filter(slug=slug, status="ACTIVE").exists():
+            raise forms.ValidationError("Organisation not found")
+        return slug
+
+
+class RoleSelectionForm(forms.Form):
+    ROLE_CHOICES = [
+        ('ORG_ADMIN', 'Admin'),
+        ('TEACHER', 'Teacher'),
+        ('STUDENT', 'Student'),
+    ]
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Select Your Role")
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField()
-    password = forms.CharField(widget=forms.PasswordInput)
+    email = forms.EmailField(label="Email")
+    password = forms.CharField(widget=forms.PasswordInput, label="Password")
 
 
 class OrganisationRegisterForm(forms.Form):
@@ -44,31 +59,13 @@ class OrganisationRegisterForm(forms.Form):
         return email
 
 
-class SimpleUserForm(forms.Form):
-    name = forms.CharField(max_length=255)
-    email = forms.EmailField()
-    password = forms.CharField(widget=forms.PasswordInput)
-
-    def clean_email(self):
-        email = self.cleaned_data["email"]
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Email already exists")
-        return email
-
-
 class StudentRegisterForm(forms.Form):
-    slug = forms.SlugField(max_length=50, label="Organisation Slug")
-    name = forms.CharField(max_length=255, label="Full Name")
+    first_name = forms.CharField(max_length=100, label="First Name")
+    last_name = forms.CharField(max_length=100, label="Last Name")
     email = forms.EmailField(label="Email")
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
     phone = forms.CharField(max_length=20, label="Phone Number")
     address = forms.CharField(widget=forms.Textarea, label="Address")
-
-    def clean_slug(self):
-        slug = self.cleaned_data["slug"]
-        if not Organisation.objects.filter(slug=slug, status="ACTIVE").exists():
-            raise forms.ValidationError("Organisation not found or inactive")
-        return slug
 
     def clean_email(self):
         email = self.cleaned_data["email"]
@@ -78,18 +75,12 @@ class StudentRegisterForm(forms.Form):
 
 
 class TeacherRegisterForm(forms.Form):
-    slug = forms.SlugField(max_length=50, label="Organisation Slug")
-    name = forms.CharField(max_length=255, label="Full Name")
+    first_name = forms.CharField(max_length=100, label="First Name")
+    last_name = forms.CharField(max_length=100, label="Last Name")
     email = forms.EmailField(label="Email")
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
     phone = forms.CharField(max_length=20, label="Phone Number")
     address = forms.CharField(widget=forms.Textarea, label="Address")
-
-    def clean_slug(self):
-        slug = self.cleaned_data["slug"]
-        if not Organisation.objects.filter(slug=slug, status="ACTIVE").exists():
-            raise forms.ValidationError("Organisation not found or inactive")
-        return slug
 
     def clean_email(self):
         email = self.cleaned_data["email"]
