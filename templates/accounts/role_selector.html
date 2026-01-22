@@ -6,8 +6,8 @@
 </a>
 
 <div class="auth-header">
-  <div class="heading">Create Account</div>
-  <div class="sub">Choose your role to get started</div>
+  <div class="heading">Select Your Role</div>
+  <div class="sub">{{ org.name }}</div>
 </div>
 
 <form method="post">
@@ -18,24 +18,11 @@
       <input type="radio" name="role" value="ORG_ADMIN" required>
       <div class="role-content">
         <div class="role-icon">
-          <i class="fa-solid fa-building"></i>
+          <i class="fa-solid fa-user-shield"></i>
         </div>
         <div class="role-info">
           <div class="role-title">Organisation Admin</div>
-          <div class="role-desc">Create and manage your own organisation</div>
-        </div>
-      </div>
-    </label>
-    
-    <label class="role-card">
-      <input type="radio" name="role" value="STUDENT" required>
-      <div class="role-content">
-        <div class="role-icon">
-          <i class="fa-solid fa-user-graduate"></i>
-        </div>
-        <div class="role-info">
-          <div class="role-title">Student</div>
-          <div class="role-desc">Join your organisation as a student</div>
+          <div class="role-desc">Manage organisation settings, users, and permissions</div>
         </div>
       </div>
     </label>
@@ -48,18 +35,27 @@
         </div>
         <div class="role-info">
           <div class="role-title">Teacher</div>
-          <div class="role-desc">Join your organisation as a teacher</div>
+          <div class="role-desc">Create courses, manage classes, and track student progress</div>
+        </div>
+      </div>
+    </label>
+    
+    <label class="role-card">
+      <input type="radio" name="role" value="STUDENT" required>
+      <div class="role-content">
+        <div class="role-icon">
+          <i class="fa-solid fa-user-graduate"></i>
+        </div>
+        <div class="role-info">
+          <div class="role-title">Student</div>
+          <div class="role-desc">Access courses, complete assignments, and view grades</div>
         </div>
       </div>
     </label>
   </div>
   
-  <button class="button" type="submit">Continue</button>
+  <button class="button" type="submit">Continue to Login</button>
 </form>
-
-<div class="auth-footer">
-  Already have an account? <a href="/">Login here</a>
-</div>
 
 <style>
 .role-card{

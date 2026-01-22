@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:15
-    container_name: cms-db
     environment:
       POSTGRES_DB: scms_db
       POSTGRES_USER: scms_admin
@@ -12,12 +11,10 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: cms-redis
     restart: unless-stopped
 
   web:
     build: .
-    container_name: cms-web
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
     ports:
       - "8000:8000"
@@ -38,7 +35,6 @@ services:
 
   celery-worker:
     build: .
-    container_name: cms-celery-worker
     command: celery -A config worker -l info
     depends_on:
       - db
@@ -58,7 +54,6 @@ services:
 
   celery-beat:
     build: .
-    container_name: cms-celery-beat
     command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       - db
