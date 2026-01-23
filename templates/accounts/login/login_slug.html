@@ -1,0 +1,67 @@
+{% extends "accounts/base_auth.html" %}
+{% load static %}
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold text-dark mb-1" style="font-family:'Google Sans',Arial,sans-serif;">Enter Organisation</h2>
+    <div class="text-muted mb-2" style="font-size:1.05rem;">Enter your organisation's slug to continue.</div>
+</div>
+<div class="alert alert-warning py-2 px-3 mb-3 rounded" style="font-size:0.98rem;">
+    If you don’t have an organisation slug, please ask your administrator.
+</div>
+<form method="post" novalidate autocomplete="off">
+    {% csrf_token %}
+    <div class="mb-3 position-relative">
+        <label for="id_slug" class="form-label fw-semibold">Organisation Slug</label>
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0" style="border-radius:0.5rem 0 0 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#888" stroke-width="2"><path d="M3 21V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><rect x="7" y="10" width="10" height="8" rx="2" fill="#eee"/></svg>
+            </span>
+            <input type="text" name="slug" id="id_slug" class="form-control border-start-0 rounded-end" style="height:44px; border-radius:0 0.5rem 0.5rem 0;" placeholder="e.g. myschool" value="{{ request.POST.slug|default_if_none:'' }}" pattern="[a-z0-9-]+" required>
+        </div>
+        {% if form.slug.errors %}
+            <div class="d-flex align-items-center mt-1 text-danger" style="font-size:0.97rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#d32f2f" stroke-width="2"><circle cx="12" cy="12" r="10" stroke="#d32f2f" stroke-width="2" fill="#fff"/><path stroke="#d32f2f" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                <span class="ms-2">{{ form.slug.errors.0 }}</span>
+            </div>
+        {% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="d-flex align-items-center mt-1 text-danger" style="font-size:0.97rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#d32f2f" stroke-width="2"><circle cx="12" cy="12" r="10" stroke="#d32f2f" stroke-width="2" fill="#fff"/><path stroke="#d32f2f" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                    <span class="ms-2">{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div class="form-text text-muted mt-1" style="font-size:0.97rem;">Your organisation will provide this slug.</div>
+    </div>
+    <button type="submit" class="btn w-100 py-2 fw-semibold text-white" style="background:linear-gradient(90deg,#222,#444);border-radius:0.5rem;">Continue</button>
+</form>
+<div class="mt-4 text-center text-muted" style="font-size:0.98rem;">
+    New user? <a href="{% url 'register_selector' %}" class="fw-semibold text-dark text-decoration-underline">Register here</a>
+</div>
+<script>
+    // Frontend validation for lowercase slug
+    document.addEventListener('DOMContentLoaded', function() {
+        var slugInput = document.getElementById('id_slug');
+        slugInput.addEventListener('input', function() {
+            var value = slugInput.value;
+            var errorDiv = slugInput.parentElement.parentElement.querySelector('.text-danger');
+            if (/[A-Z]/.test(value)) {
+                slugInput.classList.add('border-danger');
+                if (!errorDiv) {
+                    var div = document.createElement('div');
+                    div.className = 'd-flex align-items-center mt-1 text-danger';
+                    div.style.fontSize = '0.97rem';
+                    div.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#d32f2f" stroke-width="2"><circle cx="12" cy="12" r="10" stroke="#d32f2f" stroke-width="2" fill="#fff"/><path stroke="#d32f2f" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg><span class="ms-2">Slug must be lowercase.</span>';
+                    slugInput.parentElement.parentElement.appendChild(div);
+                }
+            } else {
+                slugInput.classList.remove('border-danger');
+                if (errorDiv && errorDiv.textContent.includes('Slug must be lowercase.')) {
+                    errorDiv.remove();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
