@@ -2,6 +2,14 @@ from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+
 from tenancy.models import Organisation
 from .models import User, StudentProfile, TeacherProfile
 from .forms import (
@@ -12,8 +20,42 @@ from .forms import (
     StudentRegisterForm,
     TeacherRegisterForm
 )
+from .serializers import CustomTokenObtainPairSerializer
+from .api_permission import IsTenantUser
 
+# --- JWT API VIEWS ---
+class TenantTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = [AllowAny]
 
+    def post(self, request, *args, **kwargs):
+        org_id = request.data.get('organisation_id')
+        if not org_id:
+            return Response({'detail': 'organisation_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Optionally, you can add more org/user validation here
+        response = super().post(request, *args, **kwargs)
+        # Only return allowed fields
+        if response.status_code == 200:
+            data = response.data
+            allowed = {'refresh', 'access'}
+            filtered = {k: v for k, v in data.items() if k in allowed}
+            return Response(filtered, status=200)
+        return response
+
+class LogoutAndBlacklistRefreshTokenForUserView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({'detail': 'Refresh token required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception:
+            return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
+        
 def platform_login_landing(request):
     return render(request, "accounts/tenant_selector.html")
 
