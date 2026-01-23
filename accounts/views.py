@@ -55,7 +55,7 @@ class LogoutAndBlacklistRefreshTokenForUserView(APIView):
             return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
         
 def platform_login_landing(request):
-    return render(request, "accounts/tenant_selector.html")
+    return render(request, "accounts/login/login_slug.html")
 
 
 def check_org(request, slug):
