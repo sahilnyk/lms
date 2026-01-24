@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="mb-4">
-    <h2 class="fw-semibold text-dark mb-3" style="font-family:'Google Sans',Arial,sans-serif; color:#171e1e;">
+    <h2 class="fw-semibold text-dark mb-3" style="font-family:'Google Sans',Arial,sans-serif; color:#1f2933;">
         Select your role
     </h2>
     <div class="d-flex align-items-start py-2 px-3 mb-4 rounded" style="background-color:#e7f3f8; font-size:0.95rem; line-height:1.5;">
@@ -26,8 +26,8 @@
                     <i class="fa fa-building" aria-hidden="true"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#171e1e;">Organisation Admin</div>
-                    <div class="text-muted" style="font-size:0.92rem;">Manage your organisation, users, and settings.</div>
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#2e3440;">Organisation Admin</div>
+                    <div style="font-size:0.92rem; color:#5b6472;">Manage your organisation, users, and settings.</div>
                 </div>
             </label>
         </div>
@@ -40,8 +40,8 @@
                     <i class="fa fa-user-circle-o" aria-hidden="true"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#171e1e;">Teacher</div>
-                    <div class="text-muted" style="font-size:0.92rem;">Create courses and manage classrooms.</div>
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#2e3440;">Teacher</div>
+                    <div style="font-size:0.92rem; color:#5b6472;">Create courses and manage classrooms.</div>
                 </div>
             </label>
         </div>
@@ -54,8 +54,8 @@
                     <i class="fa fa-graduation-cap" aria-hidden="true"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#171e1e;">Student</div>
-                    <div class="text-muted" style="font-size:0.92rem;">Access courses and learning content.</div>
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#2e3440;">Student</div>
+                    <div style="font-size:0.92rem; color:#5b6472;">Access courses and learning content.</div>
                 </div>
             </label>
         </div>
@@ -64,34 +64,64 @@
     <button type="submit" id="continueBtn" disabled class="btn w-100 py-2 fw-semibold text-white" style="background:linear-gradient(135deg, #2c3232, #3a3f3f); border:none; border-radius:0.5rem; opacity:0.6; transition:all 0.2s ease; cursor:not-allowed; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
         Continue
     </button>
+    
+    <div id="roleError" style="font-size:0.92rem; color:#d32f2f; display:none;" class="mt-2">
+        <i class="fa fa-exclamation-circle me-1" aria-hidden="true"></i>
+        Please select a role to continue.
+    </div>
 </form>
 
 <style>
     .role-card {
+        position: relative;
         border-color: #dee2e6 !important;
-        background-image: 
-            linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
-        background-size: 18px 18px;
-        background-position: 0 0;
+        background-color: #f2f3f5;
         transition: all 0.3s ease-in-out;
-        opacity: 0.7;
         transform: translateY(20px);
+    }
+    .role-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            linear-gradient(rgba(242, 243, 245, 0.94), rgba(242, 243, 245, 0.94)),
+            url('{% static "images/background/card-design.png" %}');
+        background-repeat: repeat;
+        background-size: auto;
+        background-position: top left;
+        border-radius: inherit;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .role-card > * {
+        position: relative;
+        z-index: 1;
     }
     .role-card:hover {
         border-color: #1978c6 !important;
         box-shadow: 0 2px 8px rgba(25,120,198,0.15);
-        background-position: 2px 2px;
+        transform: translateY(-2px);
+    }
+    .role-card:hover::before {
+        background-image: 
+            linear-gradient(rgba(242, 243, 245, 0.92), rgba(242, 243, 245, 0.92)),
+            url('{% static "images/background/card-design.png" %}');
     }
     .role-radio:checked + .role-card {
         border-color: #50c878 !important;
         border-width: 2px !important;
         box-shadow: 0 4px 12px rgba(80,200,120,0.2);
-        opacity: 1;
         transform: translateY(0);
     }
+    .role-radio:checked + .role-card::before {
+        background-image: 
+            linear-gradient(rgba(242, 243, 245, 0.90), rgba(242, 243, 245, 0.90)),
+            url('{% static "images/background/card-design.png" %}');
+    }
     .role-radio:not(:checked) + .role-card {
-        opacity: 0.7;
         transform: translateY(20px);
     }
 </style>
@@ -103,12 +133,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     radioButtons.forEach(function(radio) {
         radio.addEventListener('change', function() {
+            var roleError = document.getElementById('roleError');
             if (document.querySelector('.role-radio:checked')) {
                 continueBtn.disabled = false;
                 continueBtn.style.opacity = '1';
                 continueBtn.style.cursor = 'pointer';
+                roleError.style.display = 'none';
             }
         });
+    });
+    
+    // Validate on form submit
+    document.getElementById('roleForm').addEventListener('submit', function(e) {
+        var roleError = document.getElementById('roleError');
+        if (!document.querySelector('.role-radio:checked')) {
+            e.preventDefault();
+            roleError.style.display = 'block';
+        }
     });
     
     // Hover effect for enabled button
