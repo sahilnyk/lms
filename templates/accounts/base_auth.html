@@ -38,7 +38,7 @@
             position: relative;
         }
         .right-overlay {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.6);
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: 1;
@@ -63,6 +63,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 44px;
+            height: 44px;
         }
         .help-icon:hover {
             transform: scale(1.08);
@@ -128,6 +130,14 @@
                         Padhai karo, life set ho jayegi.
                     </div>
                 </div>
+                <div class="position-absolute bottom-0 w-100 text-center pb-3" style="z-index: 2;">
+                    <div class="quote-text" style="font-size:0.80rem; font-style:normal;">
+                        Created for Small Institutions • Swadeshi Product
+                    </div>
+                    <div class="quote-text mt-1" style="font-size:0.77rem; font-style:normal;">
+                        Founder's Site: <a href="https://sahilnyk.tech" target="_blank" style="color:#c5c3c6; text-decoration:none;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">https://sahilnyk.tech</a>
+                    </div>
+                </div>
             </div>
             <!-- Form Panel -->
             <div class="col-md-8 right-bg d-flex align-items-center justify-content-center position-relative" style="min-height:100vh;">
@@ -137,8 +147,12 @@
                         {% block content %}{% endblock %}
                     </div>
                 </div>
-                <div class="help-icon" tabindex="0" id="studentHelpBtn">
+                <div class="help-icon" tabindex="0" id="studentHelpBtn" style="right: 32px;">
                     <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+                </div>
+                <!-- Privacy page will be linked here later -->
+                <div class="help-icon" tabindex="0" id="privacyBtn" style="left: 32px; bottom: 24px;" onclick="return false;">
+                    <i class="fa fa-user-secret" aria-hidden="true"></i>
                 </div>
                 <div class="help-panel" id="studentHelpPanel">
                     <div class="fw-semibold mb-2">Need help?</div>
