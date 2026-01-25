@@ -1,4 +1,6 @@
 from rest_framework import permissions
+from tenancy.models import Organisation
+
 
 class IsTenantUser(permissions.BasePermission):
     """
@@ -6,19 +8,24 @@ class IsTenantUser(permissions.BasePermission):
     Checks organisation_id in URL kwargs, request.data, or request.query_params.
     """
     def has_permission(self, request, view):
-        org_id = None
-        # Try to get organisation_id from URL kwargs
-        if hasattr(view, 'kwargs') and view.kwargs:
-            org_id = view.kwargs.get('organisation_id')
-        # If not found, try request.data (for POST, PUT, PATCH)
-        if not org_id:
-            org_id = request.data.get('organisation_id') if hasattr(request, 'data') else None
-        # If still not found, try query params (for GET)
-        if not org_id:
-            org_id = request.query_params.get('organisation_id') if hasattr(request, 'query_params') else None
         user = request.user
-        # Only allow if user is authenticated and belongs to the requested organisation
-        if not user or not user.is_authenticated or not org_id:
+        if not user or not user.is_authenticated:
             return False
-        # Compare user's organisation id with the requested org_id
+        org_id = (
+            view.kwargs.get('organisation_id') or
+            request.data.get('organisation_id') or
+            request.query_params.get('organisation_id')
+        )
+        if not org_id:
+            return False
         return str(getattr(user, 'organisation_id', None)) == str(org_id)
+
+
+class AllowTokenObtain(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method != 'POST':
+            return False
+        slug = request.data.get('organisation_slug')
+        if not slug:
+            return False
+        return Organisation.objects.filter(slug=slug, status='ACTIVE').exists()

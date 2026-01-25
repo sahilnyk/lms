@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -19,212 +19,242 @@ from .forms import (
     TeacherRegisterForm
 )
 from .serializers import CustomTokenObtainPairSerializer
-from .api_permission import IsTenantUser
+from .api_permission import IsTenantUser, AllowTokenObtain
 
-#  JWT API VIEWS
+
+VALID_ROLES = {"ORG_ADMIN", "TEACHER", "STUDENT"}
+
+ROLE_LOGIN_ROUTES = {
+    "ORG_ADMIN": "login_admin",
+    "TEACHER": "login_teacher",
+    "STUDENT": "login_student",
+}
+
+ROLE_REGISTER_ROUTES = {
+    "ORG_ADMIN": "register_admin",
+    "TEACHER": "register_teacher",
+    "STUDENT": "register_student",
+}
+
+ROLE_DASHBOARD_ROUTES = {
+    "ORG_ADMIN": "admin_dashboard",
+    "TEACHER": "teacher_dashboard",
+    "STUDENT": "student_dashboard",
+}
+
 class TenantTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-    permission_classes = [AllowAny, IsTenantUser]
+    permission_classes = [AllowTokenObtain]
 
     def post(self, request, *args, **kwargs):
-        org_id = request.data.get('organisation_id')
+        org_id = request.data.get("organisation_id")
         if not org_id:
-            return Response({'detail': 'organisation_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        # Optionally, you can add more org/user validation here
+            return Response(
+                {"detail": "organisation_id is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         response = super().post(request, *args, **kwargs)
-        # Only return allowed fields
         if response.status_code == 200:
-            data = response.data
-            allowed = {'refresh', 'access'}
-            filtered = {k: v for k, v in data.items() if k in allowed}
-            return Response(filtered, status=200)
+            return Response(
+                {
+                    "refresh": response.data.get("refresh"),
+                    "access": response.data.get("access")
+                },
+                status=200
+            )
         return response
+
 
 class LogoutAndBlacklistRefreshTokenForUserView(APIView):
     permission_classes = [AllowAny, IsTenantUser]
 
     def post(self, request):
-        refresh_token = request.data.get('refresh')
+        refresh_token = request.data.get("refresh")
         if not refresh_token:
-            return Response({'detail': 'Refresh token required.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_205_RESET_CONTENT)
-        except Exception:
-            return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-def platform_login_landing(request):
-    return render(request, "accounts/login/login_slug.html")
+            return Response(
+                {"detail": "Refresh token required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        try:
+            RefreshToken(refresh_token).blacklist()
+            return Response(
+                {"detail": "Successfully logged out."},
+                status=status.HTTP_205_RESET_CONTENT
+            )
+        except Exception:
+            return Response(
+                {"detail": "Invalid or expired token."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 def check_org(request, slug):
     exists = Organisation.objects.filter(slug=slug, status="ACTIVE").exists()
     return JsonResponse({"exists": exists})
 
 
+def _clear_login_session(request):
+    request.session.pop("login_org_slug", None)
+    request.session.pop("login_role", None)
+
+
+def _get_login_org(request):
+    slug = request.session.get("login_org_slug")
+    if not slug:
+        return None, None
+
+    try:
+        org = Organisation.objects.get(slug=slug, status="ACTIVE")
+        return slug, org
+    except Organisation.DoesNotExist:
+        return slug, None
+
+def platform_login_landing(request):
+    return render(request, "accounts/login/login_slug.html")
+
+
 def login_slug_view(request):
     if request.method == "POST":
-        slug = request.POST.get('slug', '').strip()
+        slug = request.POST.get("slug", "").strip().lower()
+
         if not slug:
-            messages.error(request, "Organisation slug is required")
-            return render(request, "accounts/login/login_slug.html")
-        exists = Organisation.objects.filter(slug=slug, status="ACTIVE").exists()
-        if not exists:
-            messages.error(request, "Organisation not found or inactive")
-            return render(request, "accounts/login/login_slug.html")
-        request.session['login_org_slug'] = slug
-        return redirect('login_selector')
+            messages.error(request, "Organisation slug is required.")
+            return redirect("login_slug")
+
+        if not Organisation.objects.filter(slug=slug, status="ACTIVE").exists():
+            messages.error(request, "Organisation not found or inactive.")
+            return redirect("login_slug")
+
+        request.session["login_org_slug"] = slug
+        return redirect("login_selector")
+
     return render(request, "accounts/login/login_slug.html")
 
 
 def login_selector_view(request):
-    slug = request.session.get('login_org_slug')
-    if not slug:
-        return redirect('login_slug')
+    if not request.session.get("login_org_slug"):
+        messages.error(request, "Please enter your organisation first.")
+        return redirect("login_slug")
+
     if request.method == "POST":
-        role = request.POST.get('role')
-        if role in ['ORG_ADMIN', 'TEACHER', 'STUDENT']:
-            request.session['login_role'] = role
-            if role == 'ORG_ADMIN':
-                return redirect('login_admin')
-            elif role == 'TEACHER':
-                return redirect('login_teacher')
-            elif role == 'STUDENT':
-                return redirect('login_student')
+        role = request.POST.get("role", "").strip().upper()
+        if role not in VALID_ROLES:
+            messages.error(request, "Please select a valid role.")
+            return render(request, "accounts/login/login_selector.html")
+
+        request.session["login_role"] = role
+        return redirect(ROLE_LOGIN_ROUTES[role])
+
     return render(request, "accounts/login/login_selector.html")
 
 
 def login_admin_view(request):
-    slug = request.session.get('login_org_slug')
-    if not slug:
-        return redirect('login_slug')
-    try:
-        org = Organisation.objects.get(slug=slug, status="ACTIVE")
-    except Organisation.DoesNotExist:
-        messages.error(request, "Organisation not found")
-        return redirect('login_slug')
+    slug, org = _get_login_org(request)
+    if not slug or not org:
+        _clear_login_session(request)
+        return redirect("login_slug")
+
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"]
-        password = form.cleaned_data["password"]
-        user = authenticate(request, username=email, password=password)
-        if not user or user.organisation != org or user.role != 'ORG_ADMIN' or not user.is_active:
-            messages.error(request, "Invalid credentials or account inactive")
+        user = authenticate(
+            request,
+            username=form.cleaned_data["email"],
+            password=form.cleaned_data["password"]
+        )
+
+        if not user or user.organisation != org or user.role != "ORG_ADMIN" or not user.is_active:
+            messages.error(request, "Invalid credentials.")
             return render(request, "accounts/login/login_admin.html", {"form": form, "org": org})
+
         login(request, user)
-        request.session.pop('login_org_slug', None)
-        request.session.pop('login_role', None)
-        return redirect('admin_dashboard', slug=slug)
+        _clear_login_session(request)
+        return redirect(ROLE_DASHBOARD_ROUTES["ORG_ADMIN"], slug=slug)
+
     return render(request, "accounts/login/login_admin.html", {"form": form, "org": org})
 
 
 def login_teacher_view(request):
-    slug = request.session.get('login_org_slug')
-    if not slug:
-        return redirect('login_slug')
-    try:
-        org = Organisation.objects.get(slug=slug, status="ACTIVE")
-    except Organisation.DoesNotExist:
-        messages.error(request, "Organisation not found")
-        return redirect('login_slug')
+    slug, org = _get_login_org(request)
+    if not slug or not org:
+        _clear_login_session(request)
+        return redirect("login_slug")
+
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"]
-        password = form.cleaned_data["password"]
-        user = authenticate(request, username=email, password=password)
-        if not user or user.organisation != org or user.role != 'TEACHER' or not user.is_active:
-            messages.error(request, "Invalid credentials or account inactive")
+        user = authenticate(
+            request,
+            username=form.cleaned_data["email"],
+            password=form.cleaned_data["password"]
+        )
+
+        if not user or user.organisation != org or user.role != "TEACHER" or not user.is_active:
+            messages.error(request, "Invalid credentials.")
             return render(request, "accounts/login/login_teacher.html", {"form": form, "org": org})
-        try:
-            teacher_profile = TeacherProfile.objects.get(user=user)
-            if not teacher_profile.approved:
-                messages.error(request, "Your teacher account is pending approval from the organisation admin")
-                return render(request, "accounts/login/login_teacher.html", {"form": form, "org": org})
-        except TeacherProfile.DoesNotExist:
-            messages.error(request, "Teacher profile not found")
+
+        profile = TeacherProfile.objects.filter(user=user).first()
+        if not profile or not profile.approved:
+            messages.error(request, "Your account is pending admin approval.")
             return render(request, "accounts/login/login_teacher.html", {"form": form, "org": org})
+
         login(request, user)
-        request.session.pop('login_org_slug', None)
-        request.session.pop('login_role', None)
-        return redirect('teacher_dashboard', slug=slug)
+        _clear_login_session(request)
+        return redirect(ROLE_DASHBOARD_ROUTES["TEACHER"], slug=slug)
+
     return render(request, "accounts/login/login_teacher.html", {"form": form, "org": org})
 
 
 def login_student_view(request):
-    slug = request.session.get('login_org_slug')
-    if not slug:
-        return redirect('login_slug')
-    try:
-        org = Organisation.objects.get(slug=slug, status="ACTIVE")
-    except Organisation.DoesNotExist:
-        messages.error(request, "Organisation not found")
-        return redirect('login_slug')
+    slug, org = _get_login_org(request)
+    if not slug or not org:
+        _clear_login_session(request)
+        return redirect("login_slug")
+
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"]
-        password = form.cleaned_data["password"]
-        user = authenticate(request, username=email, password=password)
-        if not user or user.organisation != org or user.role != 'STUDENT' or not user.is_active:
-            messages.error(request, "Invalid credentials or account inactive")
-            return render(request, "accounts/login/login_student.html", {"form": form, "org": org})
-        login(request, user)
-        request.session.pop('login_org_slug', None)
-        request.session.pop('login_role', None)
-        return redirect('student_dashboard', slug=slug)
-    return render(request, "accounts/login/login_student.html", {"form": form, "org": org})
+        user = authenticate(
+            request,
+            username=form.cleaned_data["email"],
+            password=form.cleaned_data["password"]
+        )
 
+        if not user or user.organisation != org or user.role != "STUDENT" or not user.is_active:
+            messages.error(request, "Invalid credentials.")
+            return render(request, "accounts/login/login_student.html", {"form": form, "org": org})
+
+        login(request, user)
+        _clear_login_session(request)
+        return redirect(ROLE_DASHBOARD_ROUTES["STUDENT"], slug=slug)
+
+    return render(request, "accounts/login/login_student.html", {"form": form, "org": org})
 
 def register_selector(request):
     if request.method == "POST":
-        role = request.POST.get('role')
-        if role in ['ORG_ADMIN', 'TEACHER', 'STUDENT']:
-            request.session['register_role'] = role
-            return redirect('register_step_slug')
+        role = request.POST.get("role", "").strip().upper()
+        if role not in VALID_ROLES:
+            messages.error(request, "Please select a valid role.")
+            return render(request, "accounts/register/register_selector.html")
+
+        request.session["register_role"] = role
+        return redirect(ROLE_REGISTER_ROUTES[role])
+
     return render(request, "accounts/register/register_selector.html")
 
 
-def register_step_slug(request):
-    role = request.session.get('register_role')
-    if not role:
-        return redirect('register_selector')
-    if request.method == "POST":
-        slug = request.POST.get('slug', '').strip()
-        if not slug:
-            messages.error(request, "Organisation slug is required")
-            return render(request, "accounts/login/login_slug.html")
-        org_exists = Organisation.objects.filter(slug=slug).exists()
-        if role == 'ORG_ADMIN':
-            if org_exists:
-                messages.error(request, "Organisation slug already exists. Please choose a different slug")
-                return render(request, "accounts/login/login_slug.html")
-            request.session['register_slug'] = slug
-            return redirect('register_admin')
-        else:
-            if not org_exists:
-                messages.error(request, "Organisation not found. Please contact your organisation admin")
-                return render(request, "accounts/login/login_slug.html")
-            try:
-                org = Organisation.objects.get(slug=slug, status="ACTIVE")
-                request.session['register_slug'] = slug
-                if role == 'STUDENT':
-                    return redirect('register_student')
-                elif role == 'TEACHER':
-                    return redirect('register_teacher')
-            except Organisation.DoesNotExist:
-                messages.error(request, "Organisation is not active")
-                return render(request, "accounts/login/login_slug.html")
-    return render(request, "accounts/login/login_slug.html")
-
-
 def register_admin(request):
-    role = request.session.get('register_role')
-    slug_session = request.session.get('register_slug')
-    if role != 'ORG_ADMIN' or not slug_session:
-        return redirect('register_selector')
-    form = OrganisationRegisterForm(request.POST or None, initial={'slug': slug_session})
+    if request.session.get("register_role") != "ORG_ADMIN":
+        messages.error(request, "Invalid registration flow.")
+        return redirect("register_selector")
+
+    form = OrganisationRegisterForm(request.POST or None)
+
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
+
+        if Organisation.objects.filter(slug=data["slug"]).exists():
+            form.add_error("slug", "This organisation slug is already taken.")
+            return render(request, "accounts/register/register_admin.html", {"form": form})
+
         org = Organisation.objects.create(
             name=data["org_name"],
             slug=data["slug"],
@@ -232,6 +262,7 @@ def register_admin(request):
             address=data["org_address"],
             size=data["org_size"]
         )
+
         User.objects.create_user(
             email=data["email"],
             password=data["password"],
@@ -241,26 +272,30 @@ def register_admin(request):
             is_verified=True,
             address=data["admin_address"]
         )
-        request.session.pop('register_role', None)
-        request.session.pop('register_slug', None)
-        messages.success(request, "Organisation created successfully! You can now login")
-        return redirect('login_slug')
+
+        request.session.pop("register_role", None)
+        messages.success(request, "Organisation created successfully. Please login.")
+        return redirect("login_slug")
+
     return render(request, "accounts/register/register_admin.html", {"form": form})
 
 
 def register_teacher(request):
-    role = request.session.get('register_role')
-    slug = request.session.get('register_slug')
-    if role != 'TEACHER' or not slug:
-        return redirect('register_selector')
-    try:
-        org = Organisation.objects.get(slug=slug, status="ACTIVE")
-    except Organisation.DoesNotExist:
-        messages.error(request, "Organisation not found")
-        return redirect('register_selector')
+    if request.session.get("register_role") != "TEACHER":
+        messages.error(request, "Invalid registration flow.")
+        return redirect("register_selector")
+
     form = TeacherRegisterForm(request.POST or None)
+
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
+
+        try:
+            org = Organisation.objects.get(slug=data["organisation_slug"], status="ACTIVE")
+        except Organisation.DoesNotExist:
+            form.add_error("organisation_slug", "Organisation not found or inactive.")
+            return render(request, "accounts/register/register_teacher.html", {"form": form})
+
         user = User.objects.create_user(
             email=data["email"],
             password=data["password"],
@@ -271,31 +306,32 @@ def register_teacher(request):
             phone=data["phone"],
             address=data["address"]
         )
-        TeacherProfile.objects.create(
-            user=user,
-            organisation=org,
-            approved=False
-        )
-        request.session.pop('register_role', None)
-        request.session.pop('register_slug', None)
-        messages.success(request, "Teacher account created successfully! Your account is pending approval from the organisation admin")
-        return redirect('login_slug')
-    return render(request, "accounts/register/register_teacher.html", {"form": form, "org": org})
+
+        TeacherProfile.objects.create(user=user, organisation=org, approved=False)
+
+        request.session.pop("register_role", None)
+        messages.success(request, "Registration successful. Awaiting admin approval.")
+        return redirect("login_slug")
+
+    return render(request, "accounts/register/register_teacher.html", {"form": form})
 
 
 def register_student(request):
-    role = request.session.get('register_role')
-    slug = request.session.get('register_slug')
-    if role != 'STUDENT' or not slug:
-        return redirect('register_selector')
-    try:
-        org = Organisation.objects.get(slug=slug, status="ACTIVE")
-    except Organisation.DoesNotExist:
-        messages.error(request, "Organisation not found")
-        return redirect('register_selector')
+    if request.session.get("register_role") != "STUDENT":
+        messages.error(request, "Invalid registration flow.")
+        return redirect("register_selector")
+
     form = StudentRegisterForm(request.POST or None)
+
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
+
+        try:
+            org = Organisation.objects.get(slug=data["organisation_slug"], status="ACTIVE")
+        except Organisation.DoesNotExist:
+            form.add_error("organisation_slug", "Organisation not found or inactive.")
+            return render(request, "accounts/register/register_student.html", {"form": form})
+
         user = User.objects.create_user(
             email=data["email"],
             password=data["password"],
@@ -306,35 +342,40 @@ def register_student(request):
             phone=data["phone"],
             address=data["address"]
         )
-        StudentProfile.objects.create(
-            user=user,
-            organisation=org
-        )
-        request.session.pop('register_role', None)
-        request.session.pop('register_slug', None)
-        messages.success(request, "Student account created successfully! You can now login")
-        return redirect('login_slug')
-    return render(request, "accounts/register/register_student.html", {"form": form, "org": org})
 
+        StudentProfile.objects.create(user=user, organisation=org)
+
+        request.session.pop("register_role", None)
+        messages.success(request, "Registration successful. Please login.")
+        return redirect("login_slug")
+
+    return render(request, "accounts/register/register_student.html", {"form": form})
 
 def logout_view(request):
     logout(request)
-    return redirect('login_slug')
+    messages.success(request, "You have been logged out.")
+    return redirect("login_slug")
 
 
 def admin_dashboard(request, slug):
-    if not request.user.is_authenticated or request.user.role != 'ORG_ADMIN':
-        return redirect('login_slug')
+    if not request.user.is_authenticated or request.user.role != "ORG_ADMIN":
+        return redirect("login_slug")
+    if request.user.organisation.slug != slug:
+        return redirect("login_slug")
     return render(request, "accounts/admin_dashboard.html", {"slug": slug})
 
 
-def student_dashboard(request, slug):
-    if not request.user.is_authenticated or request.user.role != 'STUDENT':
-        return redirect('login_slug')
-    return render(request, "accounts/student_dashboard.html", {"slug": slug})
-
-
 def teacher_dashboard(request, slug):
-    if not request.user.is_authenticated or request.user.role != 'TEACHER':
-        return redirect('login_slug')
+    if not request.user.is_authenticated or request.user.role != "TEACHER":
+        return redirect("login_slug")
+    if request.user.organisation.slug != slug:
+        return redirect("login_slug")
     return render(request, "accounts/teacher_dashboard.html", {"slug": slug})
+
+
+def student_dashboard(request, slug):
+    if not request.user.is_authenticated or request.user.role != "STUDENT":
+        return redirect("login_slug")
+    if request.user.organisation.slug != slug:
+        return redirect("login_slug")
+    return render(request, "accounts/student_dashboard.html", {"slug": slug})

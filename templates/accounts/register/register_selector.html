@@ -20,42 +20,42 @@
     <div class="row g-3 mb-4">
         <!-- Organisation Admin -->
         <div class="col-12">
-            <input type="radio" name="role" value="organisation_admin" id="role_org" class="d-none role-radio" required>
+            <input type="radio" name="role" value="ORG_ADMIN" id="role_org" class="d-none role-radio" required>
             <label for="role_org" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
                 <div class="me-3" style="font-size:2rem; color:#1978c6;">
                     <i class="fa fa-building" aria-hidden="true"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#2e3440;">Organisation Admin</div>
-                    <div style="font-size:0.92rem; color:#5b6472;">Manage your organisation, users, and settings.</div>
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Organisation Admin</div>
+                    <div style="font-size:0.92rem; color:#5f6b7a;">Manage your organisation, users, and settings.</div>
                 </div>
             </label>
         </div>
 
         <!-- Teacher -->
         <div class="col-12">
-            <input type="radio" name="role" value="teacher" id="role_teacher" class="d-none role-radio" required>
+            <input type="radio" name="role" value="TEACHER" id="role_teacher" class="d-none role-radio" required>
             <label for="role_teacher" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
                 <div class="me-3" style="font-size:2rem; color:#1978c6;">
                     <i class="fa fa-user-circle-o" aria-hidden="true"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#2e3440;">Teacher</div>
-                    <div style="font-size:0.92rem; color:#5b6472;">Create courses and manage classrooms.</div>
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Teacher</div>
+                    <div style="font-size:0.92rem; color:#5f6b7a;">Create courses and manage classrooms.</div>
                 </div>
             </label>
         </div>
 
         <!-- Student -->
         <div class="col-12">
-            <input type="radio" name="role" value="student" id="role_student" class="d-none role-radio" required>
+            <input type="radio" name="role" value="STUDENT" id="role_student" class="d-none role-radio" required>
             <label for="role_student" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
                 <div class="me-3" style="font-size:2rem; color:#1978c6;">
                     <i class="fa fa-graduation-cap" aria-hidden="true"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#2e3440;">Student</div>
-                    <div style="font-size:0.92rem; color:#5b6472;">Access courses and learning content.</div>
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Student</div>
+                    <div style="font-size:0.92rem; color:#5f6b7a;">Access courses and learning content.</div>
                 </div>
             </label>
         </div>
@@ -75,9 +75,10 @@
     .role-card {
         position: relative;
         border-color: #dee2e6 !important;
-        background-color: #f2f3f5;
+        background-color: #f3f4f6;
         transition: all 0.3s ease-in-out;
         transform: translateY(20px);
+        overflow: hidden;
     }
     .role-card::before {
         content: '';
@@ -86,12 +87,11 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-image: 
-            linear-gradient(rgba(242, 243, 245, 0.94), rgba(242, 243, 245, 0.94)),
-            url('{% static "images/background/card-design.png" %}');
+        background-image: url('{% static "images/background/card-design.jpg" %}');
         background-repeat: repeat;
-        background-size: auto;
-        background-position: top left;
+        background-position: center center;
+        background-size: 105% auto;
+        opacity: 0.07;
         border-radius: inherit;
         z-index: 0;
         pointer-events: none;
@@ -106,9 +106,7 @@
         transform: translateY(-2px);
     }
     .role-card:hover::before {
-        background-image: 
-            linear-gradient(rgba(242, 243, 245, 0.92), rgba(242, 243, 245, 0.92)),
-            url('{% static "images/background/card-design.png" %}');
+        opacity: 0.09;
     }
     .role-radio:checked + .role-card {
         border-color: #50c878 !important;
@@ -117,9 +115,7 @@
         transform: translateY(0);
     }
     .role-radio:checked + .role-card::before {
-        background-image: 
-            linear-gradient(rgba(242, 243, 245, 0.90), rgba(242, 243, 245, 0.90)),
-            url('{% static "images/background/card-design.png" %}');
+        opacity: 0.11;
     }
     .role-radio:not(:checked) + .role-card {
         transform: translateY(20px);
@@ -143,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Validate on form submit
     document.getElementById('roleForm').addEventListener('submit', function(e) {
         var roleError = document.getElementById('roleError');
         if (!document.querySelector('.role-radio:checked')) {
@@ -152,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Hover effect for enabled button
     continueBtn.addEventListener('mouseenter', function() {
         if (!this.disabled) {
             this.style.background = 'linear-gradient(135deg, #363b3b, #454a4a)';
