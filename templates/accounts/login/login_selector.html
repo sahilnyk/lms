@@ -1,0 +1,172 @@
+{% extends "accounts/base_auth.html" %}
+{% load static %}
+{% block content %}
+
+<div class="mb-4">
+    <h2 class="fw-semibold text-dark mb-3" style="font-family:'Google Sans',Arial,sans-serif; color:#1f2933;">
+        Login as a role
+    </h2>
+    <div class="d-flex align-items-start py-2 px-3 mb-4 rounded" style="background-color:#e7f3f8; font-size:0.95rem; line-height:1.5;">
+        <i class="fa fa-info-circle me-2 mt-1" aria-hidden="true" style="color:#87b6dd; font-size:1.1rem;"></i>
+        <span style="color:#87b6dd;">
+            Select the role that matches your account. You must login with the same role you registered with.
+        </span>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="font-size:0.95rem;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="roleForm">
+    {% csrf_token %}
+    
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <input type="radio" name="role" value="ORG_ADMIN" id="role_org" class="d-none role-radio" required>
+            <label for="role_org" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
+                <div class="me-3" style="font-size:2rem; color:#1978c6;">
+                    <i class="fa fa-building" aria-hidden="true"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Organisation Admin</div>
+                    <div style="font-size:0.92rem; color:#5f6b7a;">Manage your organisation, users, and settings.</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="col-12">
+            <input type="radio" name="role" value="TEACHER" id="role_teacher" class="d-none role-radio" required>
+            <label for="role_teacher" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
+                <div class="me-3" style="font-size:2rem; color:#1978c6;">
+                    <i class="fa fa-user-circle-o" aria-hidden="true"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Teacher</div>
+                    <div style="font-size:0.92rem; color:#5f6b7a;">Create courses and manage classrooms.</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="col-12">
+            <input type="radio" name="role" value="STUDENT" id="role_student" class="d-none role-radio" required>
+            <label for="role_student" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
+                <div class="me-3" style="font-size:2rem; color:#1978c6;">
+                    <i class="fa fa-graduation-cap" aria-hidden="true"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Student</div>
+                    <div style="font-size:0.92rem; color:#5f6b7a;">Access courses and learning content.</div>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <button type="submit" id="continueBtn" disabled class="btn w-100 py-2 fw-semibold text-white" style="background:linear-gradient(135deg, #2c3232, #3a3f3f); border:none; border-radius:0.5rem; opacity:0.6; transition:all 0.2s ease; cursor:not-allowed; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        Continue
+    </button>
+    
+    <div id="roleError" style="font-size:0.92rem; color:#d32f2f; display:none;" class="mt-2">
+        <i class="fa fa-exclamation-circle me-1" aria-hidden="true"></i>
+        Please select a role to continue.
+    </div>
+</form>
+
+<style>
+    .role-card {
+        position: relative;
+        border-color: #dee2e6 !important;
+        background-color: #f3f4f6;
+        transition: all 0.3s ease-in-out;
+        transform: translateY(20px);
+        overflow: hidden;
+    }
+    .role-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('{% static "images/background/card-design.jpg" %}');
+        background-repeat: repeat;
+        background-position: center center;
+        background-size: 105% auto;
+        opacity: 0.07;
+        border-radius: inherit;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .role-card > * {
+        position: relative;
+        z-index: 1;
+    }
+    .role-card:hover {
+        border-color: #1978c6 !important;
+        box-shadow: 0 2px 8px rgba(25,120,198,0.15);
+        transform: translateY(-2px);
+    }
+    .role-card:hover::before {
+        opacity: 0.09;
+    }
+    .role-radio:checked + .role-card {
+        border-color: #50c878 !important;
+        border-width: 2px !important;
+        box-shadow: 0 4px 12px rgba(80,200,120,0.2);
+        transform: translateY(0);
+    }
+    .role-radio:checked + .role-card::before {
+        opacity: 0.11;
+    }
+    .role-radio:not(:checked) + .role-card {
+        transform: translateY(20px);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var radioButtons = document.querySelectorAll('.role-radio');
+    var continueBtn = document.getElementById('continueBtn');
+    
+    radioButtons.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var roleError = document.getElementById('roleError');
+            if (document.querySelector('.role-radio:checked')) {
+                continueBtn.disabled = false;
+                continueBtn.style.opacity = '1';
+                continueBtn.style.cursor = 'pointer';
+                roleError.style.display = 'none';
+            }
+        });
+    });
+    
+    document.getElementById('roleForm').addEventListener('submit', function(e) {
+        var roleError = document.getElementById('roleError');
+        if (!document.querySelector('.role-radio:checked')) {
+            e.preventDefault();
+            roleError.style.display = 'block';
+        }
+    });
+    
+    continueBtn.addEventListener('mouseenter', function() {
+        if (!this.disabled) {
+            this.style.background = 'linear-gradient(135deg, #363b3b, #454a4a)';
+        }
+    });
+    
+    continueBtn.addEventListener('mouseleave', function() {
+        if (!this.disabled) {
+            this.style.background = 'linear-gradient(135deg, #2c3232, #3a3f3f)';
+        }
+    });
+});
+</script>
+
+{% endblock %}
