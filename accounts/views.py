@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.db import transaction
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -41,6 +42,7 @@ ROLE_DASHBOARD_ROUTES = {
     "TEACHER": "teacher_dashboard",
     "STUDENT": "student_dashboard",
 }
+
 
 class TenantTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -89,6 +91,7 @@ class LogoutAndBlacklistRefreshTokenForUserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
 def check_org(request, slug):
     exists = Organisation.objects.filter(slug=slug, status="ACTIVE").exists()
     return JsonResponse({"exists": exists})
@@ -109,6 +112,7 @@ def _get_login_org(request):
         return slug, org
     except Organisation.DoesNotExist:
         return slug, None
+
 
 def platform_login_landing(request):
     return render(request, "accounts/login/login_slug.html")
@@ -228,6 +232,7 @@ def login_student_view(request):
 
     return render(request, "accounts/login/login_student.html", {"form": form, "org": org})
 
+
 def register_selector(request):
     if request.method == "POST":
         role = request.POST.get("role", "").strip().upper()
@@ -251,31 +256,30 @@ def register_admin(request):
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
 
-        if Organisation.objects.filter(slug=data["slug"]).exists():
-            form.add_error("slug", "This organisation slug is already taken.")
+        try:
+            with transaction.atomic():
+                org = Organisation.objects.create(
+                    name=data["org_name"],
+                    slug=data["slug"],
+                    status="ACTIVE"
+                )
+
+                User.objects.create_user(
+                    email=data["email"],
+                    password=data["password"],
+                    name=data["admin_name"],
+                    organisation=org,
+                    role="ORG_ADMIN",
+                    is_verified=True
+                )
+
+            request.session.pop("register_role", None)
+            messages.success(request, "Organisation created successfully. Please login.")
+            return redirect("login_slug")
+
+        except Exception:
+            messages.error(request, "Registration failed. Please try again.")
             return render(request, "accounts/register/register_admin.html", {"form": form})
-
-        org = Organisation.objects.create(
-            name=data["org_name"],
-            slug=data["slug"],
-            status="ACTIVE",
-            address=data["org_address"],
-            size=data["org_size"]
-        )
-
-        User.objects.create_user(
-            email=data["email"],
-            password=data["password"],
-            name=data["admin_name"],
-            organisation=org,
-            role="ORG_ADMIN",
-            is_verified=True,
-            address=data["admin_address"]
-        )
-
-        request.session.pop("register_role", None)
-        messages.success(request, "Organisation created successfully. Please login.")
-        return redirect("login_slug")
 
     return render(request, "accounts/register/register_admin.html", {"form": form})
 
@@ -296,22 +300,28 @@ def register_teacher(request):
             form.add_error("organisation_slug", "Organisation not found or inactive.")
             return render(request, "accounts/register/register_teacher.html", {"form": form})
 
-        user = User.objects.create_user(
-            email=data["email"],
-            password=data["password"],
-            name=f"{data['first_name']} {data['last_name']}",
-            organisation=org,
-            role="TEACHER",
-            is_verified=False,
-            phone=data["phone"],
-            address=data["address"]
-        )
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    email=data["email"],
+                    password=data["password"],
+                    name=f"{data['first_name']} {data['last_name']}",
+                    organisation=org,
+                    role="TEACHER",
+                    is_verified=False,
+                    phone=data["phone"],
+                    address=data["address"]
+                )
 
-        TeacherProfile.objects.create(user=user, organisation=org, approved=False)
+                TeacherProfile.objects.create(user=user, organisation=org, approved=False)
 
-        request.session.pop("register_role", None)
-        messages.success(request, "Registration successful. Awaiting admin approval.")
-        return redirect("login_slug")
+            request.session.pop("register_role", None)
+            messages.success(request, "Registration successful. Awaiting admin approval.")
+            return redirect("login_slug")
+
+        except Exception:
+            messages.error(request, "Registration failed. Please try again.")
+            return render(request, "accounts/register/register_teacher.html", {"form": form})
 
     return render(request, "accounts/register/register_teacher.html", {"form": form})
 
@@ -332,24 +342,31 @@ def register_student(request):
             form.add_error("organisation_slug", "Organisation not found or inactive.")
             return render(request, "accounts/register/register_student.html", {"form": form})
 
-        user = User.objects.create_user(
-            email=data["email"],
-            password=data["password"],
-            name=f"{data['first_name']} {data['last_name']}",
-            organisation=org,
-            role="STUDENT",
-            is_verified=True,
-            phone=data["phone"],
-            address=data["address"]
-        )
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    email=data["email"],
+                    password=data["password"],
+                    name=f"{data['first_name']} {data['last_name']}",
+                    organisation=org,
+                    role="STUDENT",
+                    is_verified=True,
+                    phone=data["phone"],
+                    address=data["address"]
+                )
 
-        StudentProfile.objects.create(user=user, organisation=org)
+                StudentProfile.objects.create(user=user, organisation=org)
 
-        request.session.pop("register_role", None)
-        messages.success(request, "Registration successful. Please login.")
-        return redirect("login_slug")
+            request.session.pop("register_role", None)
+            messages.success(request, "Registration successful. Please login.")
+            return redirect("login_slug")
+
+        except Exception:
+            messages.error(request, "Registration failed. Please try again.")
+            return render(request, "accounts/register/register_student.html", {"form": form})
 
     return render(request, "accounts/register/register_student.html", {"form": form})
+
 
 def logout_view(request):
     logout(request)

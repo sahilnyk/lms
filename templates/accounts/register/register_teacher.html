@@ -1,0 +1,192 @@
+{% extends "accounts/base_auth.html" %}
+{% load static %}
+{% block content %}
+
+<div class="mb-4">
+    <h2 class="fw-semibold text-dark mb-3" style="font-family:'Google Sans',Arial,sans-serif; color:#1f2933;">
+        Register as Teacher
+    </h2>
+    <div class="d-flex align-items-start py-2 px-3 mb-4 rounded" style="background-color:#e7f3f8; font-size:0.95rem; line-height:1.5;">
+        <i class="fa fa-user-circle-o me-2 mt-1" aria-hidden="true" style="color:#87b6dd; font-size:1.1rem;"></i>
+        <span style="color:#87b6dd;">
+            Join an existing organisation as a teacher. Your account will require admin approval before you can access the platform.
+        </span>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="font-size:0.95rem;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger mb-3" style="font-size:0.95rem;">
+    {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="teacherRegisterForm">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <label for="id_organisation_slug" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Organisation Slug</label>
+        <input 
+            type="text" 
+            name="organisation_slug" 
+            id="id_organisation_slug" 
+            class="form-control {% if form.organisation_slug.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="Enter your organisation slug"
+            value="{{ form.organisation_slug.value|default:'' }}"
+            required
+        >
+        <div class="form-text" style="font-size:0.85rem; color:#6c757d;">
+            Enter the slug provided by your organisation admin.
+        </div>
+        {% if form.organisation_slug.errors %}
+        <div class="invalid-feedback" style="display:block;">{{ form.organisation_slug.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="id_first_name" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">First Name</label>
+            <input 
+                type="text" 
+                name="first_name" 
+                id="id_first_name" 
+                class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                style="height:44px; border-radius:0.5rem;"
+                placeholder="Enter your first name"
+                value="{{ form.first_name.value|default:'' }}"
+                required
+            >
+            {% if form.first_name.errors %}
+            <div class="invalid-feedback">{{ form.first_name.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="id_last_name" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Last Name</label>
+            <input 
+                type="text" 
+                name="last_name" 
+                id="id_last_name" 
+                class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
+                style="height:44px; border-radius:0.5rem;"
+                placeholder="Enter your last name"
+                value="{{ form.last_name.value|default:'' }}"
+                required
+            >
+            {% if form.last_name.errors %}
+            <div class="invalid-feedback">{{ form.last_name.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="id_email" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Email</label>
+        <input 
+            type="email" 
+            name="email" 
+            id="id_email" 
+            class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="your.email@example.com"
+            value="{{ form.email.value|default:'' }}"
+            required
+        >
+        {% if form.email.errors %}
+        <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_password" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Password</label>
+        <input 
+            type="password" 
+            name="password" 
+            id="id_password" 
+            class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="Enter a strong password"
+            required
+        >
+        {% if form.password.errors %}
+        <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_confirm_password" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Confirm Password</label>
+        <input 
+            type="password" 
+            name="confirm_password" 
+            id="id_confirm_password" 
+            class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="Re-enter your password"
+            required
+        >
+        {% if form.confirm_password.errors %}
+        <div class="invalid-feedback">{{ form.confirm_password.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_phone" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Phone Number</label>
+        <input 
+            type="tel" 
+            name="phone" 
+            id="id_phone" 
+            class="form-control {% if form.phone.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="Enter your phone number"
+            value="{{ form.phone.value|default:'' }}"
+            required
+        >
+        {% if form.phone.errors %}
+        <div class="invalid-feedback">{{ form.phone.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_address" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Address</label>
+        <textarea 
+            name="address" 
+            id="id_address" 
+            class="form-control {% if form.address.errors %}is-invalid{% endif %}" 
+            style="border-radius:0.5rem;"
+            placeholder="Enter your address"
+            rows="3"
+        >{{ form.address.value|default:'' }}</textarea>
+        {% if form.address.errors %}
+        <div class="invalid-feedback">{{ form.address.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <button 
+        type="submit" 
+        id="registerBtn" 
+        class="btn w-100 py-2 fw-semibold text-white mt-3" 
+        style="background:linear-gradient(135deg, #2c3232, #3a3f3f); border:none; border-radius:0.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        Register as Teacher
+    </button>
+</form>
+
+<div class="mt-4 text-center" style="font-size:0.95rem; color:#5f6b7a;">
+    Already have an account? 
+    <a href="{% url 'login_slug' %}" style="color:#1978c6; text-decoration:none; font-weight:500;">
+        Login here
+    </a>
+</div>
+
+{% endblock %}

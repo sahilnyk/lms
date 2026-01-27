@@ -15,20 +15,81 @@
     </div>
 </div>
 
+{% if messages %}
+<div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="font-size:0.95rem;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger mb-3" style="font-size:0.95rem;">
+    {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <form method="post" id="adminRegisterForm">
     {% csrf_token %}
     
     <div class="mb-3">
-        <label for="id_full_name" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Full Name</label>
+        <label for="id_org_name" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Organisation Name</label>
         <input 
             type="text" 
-            name="full_name" 
-            id="id_full_name" 
-            class="form-control" 
+            name="org_name" 
+            id="id_org_name" 
+            class="form-control {% if form.org_name.errors %}is-invalid{% endif %}" 
             style="height:44px; border-radius:0.5rem;"
-            placeholder="Enter your full name"
+            placeholder="Enter your organisation name"
+            value="{{ form.org_name.value|default:'' }}"
             required
         >
+        {% if form.org_name.errors %}
+        <div class="invalid-feedback">{{ form.org_name.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_slug" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Organisation Slug</label>
+        <input 
+            type="text" 
+            name="slug" 
+            id="id_slug" 
+            class="form-control {% if form.slug.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="e.g., my-school (lowercase, no spaces)"
+            pattern="[a-z0-9-]+"
+            value="{{ form.slug.value|default:'' }}"
+            required
+        >
+        <div class="form-text" style="font-size:0.85rem; color:#6c757d;">
+            This will be your unique workspace URL identifier.
+        </div>
+        {% if form.slug.errors %}
+        <div class="invalid-feedback" style="display:block;">{{ form.slug.errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_admin_name" class="form-label fw-semibold" style="font-size:0.95rem; color:#263238;">Full Name</label>
+        <input 
+            type="text" 
+            name="admin_name" 
+            id="id_admin_name" 
+            class="form-control {% if form.admin_name.errors %}is-invalid{% endif %}" 
+            style="height:44px; border-radius:0.5rem;"
+            placeholder="Enter your full name"
+            value="{{ form.admin_name.value|default:'' }}"
+            required
+        >
+        {% if form.admin_name.errors %}
+        <div class="invalid-feedback">{{ form.admin_name.errors.0 }}</div>
+        {% endif %}
     </div>
 
     <div class="mb-3">
@@ -37,11 +98,15 @@
             type="email" 
             name="email" 
             id="id_email" 
-            class="form-control" 
+            class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
             style="height:44px; border-radius:0.5rem;"
             placeholder="your.email@example.com"
+            value="{{ form.email.value|default:'' }}"
             required
         >
+        {% if form.email.errors %}
+        <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+        {% endif %}
     </div>
 
     <div class="mb-3">
@@ -50,11 +115,14 @@
             type="password" 
             name="password" 
             id="id_password" 
-            class="form-control" 
+            class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
             style="height:44px; border-radius:0.5rem;"
             placeholder="Enter a strong password"
             required
         >
+        {% if form.password.errors %}
+        <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+        {% endif %}
     </div>
 
     <div class="mb-3">
@@ -63,11 +131,14 @@
             type="password" 
             name="confirm_password" 
             id="id_confirm_password" 
-            class="form-control" 
+            class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" 
             style="height:44px; border-radius:0.5rem;"
             placeholder="Re-enter your password"
             required
         >
+        {% if form.confirm_password.errors %}
+        <div class="invalid-feedback">{{ form.confirm_password.errors.0 }}</div>
+        {% endif %}
     </div>
 
     <button 
@@ -75,7 +146,7 @@
         id="registerBtn" 
         class="btn w-100 py-2 fw-semibold text-white mt-3" 
         style="background:linear-gradient(135deg, #2c3232, #3a3f3f); border:none; border-radius:0.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-        Register
+        Register Organisation
     </button>
 </form>
 
