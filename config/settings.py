@@ -29,13 +29,6 @@ SECRET_KEY = 'django-insecure-h8gla7eh3$p*2rb8bfk=nmr5o+6*k!4uqz$-@)$9nz8f1n@47$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    'lms-o3a3.onrender.com',
-]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -69,6 +62,10 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "lms-o3a3.onrender.com",
 ]
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
