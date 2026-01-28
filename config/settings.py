@@ -14,6 +14,7 @@ from pathlib import Path
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -105,15 +106,20 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME', 'scms_db'),
-        'USER': os.environ.get('DATABASE_USER', 'scms_admin'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-        'HOST': os.environ.get('DATABASE_HOST', 'db'), 
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
-    }
+    "default": dj_database_url.config(
+        default=(
+            "postgresql://"
+            f"{os.getenv('DATABASE_USER', 'scms_admin')}:"
+            f"{os.getenv('DATABASE_PASSWORD', 'admin.123')}@"
+            f"{os.getenv('DATABASE_HOST', 'db')}:"
+            f"{os.getenv('DATABASE_PORT', '5432')}/"
+            f"{os.getenv('DATABASE_NAME', 'scms_db')}"
+        ),
+        conn_max_age=600,
+        ssl_require=bool(os.getenv("DATABASE_URL")),
+    )
 }
+
 
 
 AUTH_PASSWORD_VALIDATORS = [
