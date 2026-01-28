@@ -67,7 +67,7 @@ AUTH_USER_MODEL = "accounts.User"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "70ae30e38d1c.ngrok-free.app", 
+    "lms-o3a3.onrender.com",
 ]
 
 MIDDLEWARE = [
