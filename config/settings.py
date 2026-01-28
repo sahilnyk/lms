@@ -57,11 +57,19 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "accounts.User"
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "lms-o3a3.onrender.com",
+# ALLOWED_HOSTS = [
+#     "localhost",
+#     "127.0.0.1",
+#     "lms-o3a3.onrender.com",
+# ]
+
+
+ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
 ]
+
+
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -216,9 +224,5 @@ SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'accounts.serializers.CustomTokenObtainPairSerializer',
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
 CORS_ALLOW_CREDENTIALS = True
 

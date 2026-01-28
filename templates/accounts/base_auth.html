@@ -82,7 +82,6 @@
             z-index: 2;
         }
 
-        /* SUCCESS MESSAGE (FIXED) */
         .success-inline {
             display: flex;
             gap: 10px;
@@ -135,6 +134,126 @@
 
         .help-panel.active {
             display: block;
+        }
+
+        /* MOBILE RESPONSIVE (<768px) */
+        @media (max-width: 767.98px) {
+            body {
+                min-height: auto;
+            }
+
+            .branding-bg {
+                display: none !important;
+            }
+
+            .right-bg {
+                min-height: 100vh;
+            }
+
+            .right-content {
+                padding: 20px 16px;
+                width: 100%;
+            }
+
+            .right-content > .w-100 {
+                max-width: 100% !important;
+                padding: 0 8px;
+            }
+
+            .success-inline {
+                font-size: 0.88rem;
+                padding: 8px 10px;
+            }
+
+            .success-inline i {
+                font-size: 1rem;
+            }
+
+            .help-icon {
+                bottom: 16px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+                padding: 8px;
+            }
+
+            .help-icon[style*="left:32px"] {
+                left: 16px !important;
+                right: auto !important;
+            }
+
+            .help-panel {
+                right: 16px;
+                bottom: 60px;
+                min-width: 220px;
+                padding: 14px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* TABLET RESPONSIVE (768px - 991px) */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .product-brand {
+                font-size: 1.2rem;
+                top: 16px;
+                gap: 8px;
+            }
+
+            .product-brand img {
+                height: 48px;
+                transform: translateY(-10px);
+            }
+
+            .branding-content img {
+                max-width: 200px !important;
+                width: 70% !important;
+            }
+
+            .quote-text {
+                font-size: 0.85rem;
+            }
+
+            .branding-bg .position-absolute.bottom-0 .quote-text {
+                font-size: 0.72rem !important;
+            }
+
+            .right-content {
+                padding: 24px 20px;
+            }
+
+            .right-content > .w-100 {
+                max-width: 380px !important;
+            }
+
+            .success-inline {
+                font-size: 0.9rem;
+            }
+
+            .help-icon {
+                bottom: 20px;
+                right: 24px;
+                width: 42px;
+                height: 42px;
+                font-size: 1.4rem;
+            }
+
+            .help-icon[style*="left:32px"] {
+                left: 24px !important;
+            }
+
+            .help-panel {
+                right: 24px;
+                min-width: 240px;
+            }
+        }
+
+        /* SMALL TABLET / LARGE MOBILE (576px - 767px) */
+        @media (min-width: 576px) and (max-width: 767.98px) {
+            .right-content > .w-100 {
+                max-width: 400px !important;
+                padding: 0 16px;
+            }
         }
     </style>
 </head>
