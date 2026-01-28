@@ -6,9 +6,9 @@
     <h2 class="fw-semibold text-dark mb-3" style="font-family:'Google Sans',Arial,sans-serif; color:#1f2933;">
         Select your role
     </h2>
-    <div class="d-flex align-items-start py-2 px-3 mb-4 rounded" style="background-color:#e7f3f8; font-size:0.95rem; line-height:1.5;">
-        <i class="fa fa-info-circle me-2 mt-1" aria-hidden="true" style="color:#87b6dd; font-size:1.1rem;"></i>
-        <span style="color:#87b6dd;">
+    <div class="d-flex align-items-start py-2 px-3 mb-4 rounded" style="background-color:#d0e8f5; font-size:0.95rem; line-height:1.5;">
+        <i class="fa fa-info-circle me-2 mt-1" aria-hidden="true" style="color:#1a5a7a; font-size:1.1rem;"></i>
+        <span style="color:#1a5a7a;">
             Select your role carefully. You cannot change it later.
         </span>
     </div>
@@ -17,61 +17,69 @@
 <form method="post" id="roleForm">
     {% csrf_token %}
     
-    <div class="row g-3 mb-4">
-        <!-- Organisation Admin -->
-        <div class="col-12">
-            <input type="radio" name="role" value="ORG_ADMIN" id="role_org" class="d-none role-radio" required>
-            <label for="role_org" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
-                <div class="me-3" style="font-size:2rem; color:#1978c6;">
-                    <i class="fa fa-building" aria-hidden="true"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Organisation Admin</div>
-                    <div style="font-size:0.92rem; color:#5f6b7a;">Manage your organisation, users, and settings.</div>
-                </div>
-            </label>
+    <div class="role-container">
+        <div class="row g-3 mb-4">
+            <!-- Organisation Admin -->
+            <div class="col-12">
+                <input type="radio" name="role" value="ORG_ADMIN" id="role_org" class="d-none role-radio" required>
+                <label for="role_org" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
+                    <div class="me-3" style="font-size:2rem; color:#1978c6;">
+                        <i class="fa fa-building" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Organisation Admin</div>
+                        <div style="font-size:0.92rem; color:#5f6b7a;">Manage your organisation, users, and settings.</div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Teacher -->
+            <div class="col-12">
+                <input type="radio" name="role" value="TEACHER" id="role_teacher" class="d-none role-radio" required>
+                <label for="role_teacher" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
+                    <div class="me-3" style="font-size:2rem; color:#1978c6;">
+                        <i class="fa fa-user-circle-o" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Teacher</div>
+                        <div style="font-size:0.92rem; color:#5f6b7a;">Create courses and manage classrooms.</div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Student -->
+            <div class="col-12">
+                <input type="radio" name="role" value="STUDENT" id="role_student" class="d-none role-radio" required>
+                <label for="role_student" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
+                    <div class="me-3" style="font-size:2rem; color:#1978c6;">
+                        <i class="fa fa-graduation-cap" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Student</div>
+                        <div style="font-size:0.92rem; color:#5f6b7a;">Access courses and learning content.</div>
+                    </div>
+                </label>
+            </div>
         </div>
 
-        <!-- Teacher -->
-        <div class="col-12">
-            <input type="radio" name="role" value="TEACHER" id="role_teacher" class="d-none role-radio" required>
-            <label for="role_teacher" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
-                <div class="me-3" style="font-size:2rem; color:#1978c6;">
-                    <i class="fa fa-user-circle-o" aria-hidden="true"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Teacher</div>
-                    <div style="font-size:0.92rem; color:#5f6b7a;">Create courses and manage classrooms.</div>
-                </div>
-            </label>
+        <button type="submit" id="continueBtn" disabled class="btn w-100 py-2 fw-semibold text-white continue-btn">
+            Continue
+        </button>
+        
+        <div id="roleError" style="font-size:0.92rem; color:#d32f2f; display:none;" class="mt-2 text-center">
+            <i class="fa fa-exclamation-circle me-1" aria-hidden="true"></i>
+            Please select a role to continue.
         </div>
-
-        <!-- Student -->
-        <div class="col-12">
-            <input type="radio" name="role" value="STUDENT" id="role_student" class="d-none role-radio" required>
-            <label for="role_student" class="role-card d-flex align-items-center p-3 rounded border bg-white" style="cursor:pointer; transition:all 0.2s ease;">
-                <div class="me-3" style="font-size:2rem; color:#1978c6;">
-                    <i class="fa fa-graduation-cap" aria-hidden="true"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1" style="font-size:1.05rem; color:#263238;">Student</div>
-                    <div style="font-size:0.92rem; color:#5f6b7a;">Access courses and learning content.</div>
-                </div>
-            </label>
-        </div>
-    </div>
-
-    <button type="submit" id="continueBtn" disabled class="btn w-100 py-2 fw-semibold text-white" style="background:linear-gradient(135deg, #2c3232, #3a3f3f); border:none; border-radius:0.5rem; opacity:0.6; transition:all 0.2s ease; cursor:not-allowed; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-        Continue
-    </button>
-    
-    <div id="roleError" style="font-size:0.92rem; color:#d32f2f; display:none;" class="mt-2">
-        <i class="fa fa-exclamation-circle me-1" aria-hidden="true"></i>
-        Please select a role to continue.
     </div>
 </form>
 
 <style>
+    .role-container {
+        max-width: 370px;
+        width: 100%;
+        margin: 0 auto;
+    }
+    
     .role-card {
         position: relative;
         border-color: #dee2e6 !important;
@@ -79,6 +87,9 @@
         transition: all 0.3s ease-in-out;
         transform: translateY(20px);
         overflow: hidden;
+        width: 100%;
+        max-width: 370px;
+        margin: 0 auto;
     }
     .role-card::before {
         content: '';
@@ -120,6 +131,38 @@
     .role-radio:not(:checked) + .role-card {
         transform: translateY(20px);
     }
+    
+    .continue-btn {
+        background: #1a1a1aff !important;
+        border: none !important;
+        border-radius: 0.5rem;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+        cursor: not-allowed;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        max-width: 370px;
+        margin: 0 auto;
+        display: block;
+    }
+    
+    .continue-btn:hover {
+        background: #000000 !important;
+    }
+    
+    .continue-btn:disabled {
+        background: #000000 !important;
+        opacity: 0.5;
+    }
+    
+    .continue-btn:not(:disabled) {
+        opacity: 1;
+        cursor: pointer;
+    }
+    
+    .continue-btn:not(:disabled):hover {
+        background: #000000 !important;
+        opacity: 1;
+    }
 </style>
 
 <script>
@@ -149,13 +192,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     continueBtn.addEventListener('mouseenter', function() {
         if (!this.disabled) {
-            this.style.background = 'linear-gradient(135deg, #363b3b, #454a4a)';
+            this.style.background = '#131313ff';
         }
     });
     
     continueBtn.addEventListener('mouseleave', function() {
         if (!this.disabled) {
-            this.style.background = 'linear-gradient(135deg, #2c3232, #3a3f3f)';
+            this.style.background = '#141414ff';
         }
     });
 });
