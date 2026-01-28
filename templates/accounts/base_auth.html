@@ -136,22 +136,77 @@
             display: block;
         }
 
+        .branding-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            padding-bottom: 12px;
+            z-index: 2;
+        }
+
         /* MOBILE RESPONSIVE (<768px) */
         @media (max-width: 767.98px) {
             body {
                 min-height: auto;
             }
 
+            .row.g-0.min-vh-100 {
+                flex-direction: column;
+                min-height: auto;
+            }
+
             .branding-bg {
-                display: none !important;
+                display: flex !important;
+                min-height: 38vh;
+                max-height: 42vh;
+                width: 100%;
+                order: 1;
+            }
+
+            .branding-bg.col-md-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            .product-brand {
+                top: 12px;
+                font-size: 1.1rem;
+                gap: 8px;
+            }
+
+            .product-brand img {
+                height: 42px;
+                transform: translateY(-8px);
+            }
+
+            .branding-content img {
+                max-width: 180px !important;
+                width: 55% !important;
+            }
+
+            .branding-content .quote-text {
+                font-size: 0.82rem;
+                margin-top: 6px !important;
+            }
+
+            .branding-footer {
+                display: none;
             }
 
             .right-bg {
-                min-height: 100vh;
+                min-height: auto;
+                width: 100%;
+                order: 2;
+            }
+
+            .right-bg.col-md-8 {
+                flex: 0 0 100%;
+                max-width: 100%;
             }
 
             .right-content {
-                padding: 20px 16px;
+                padding: 24px 16px 80px 16px;
                 width: 100%;
             }
 
@@ -178,7 +233,7 @@
                 padding: 8px;
             }
 
-            .help-icon[style*="left:32px"] {
+            .privacy-icon-mobile {
                 left: 16px !important;
                 right: auto !important;
             }
@@ -214,7 +269,7 @@
                 font-size: 0.85rem;
             }
 
-            .branding-bg .position-absolute.bottom-0 .quote-text {
+            .branding-footer .quote-text {
                 font-size: 0.72rem !important;
             }
 
@@ -238,10 +293,6 @@
                 font-size: 1.4rem;
             }
 
-            .help-icon[style*="left:32px"] {
-                left: 24px !important;
-            }
-
             .help-panel {
                 right: 24px;
                 min-width: 240px;
@@ -253,6 +304,11 @@
             .right-content > .w-100 {
                 max-width: 400px !important;
                 padding: 0 16px;
+            }
+
+            .branding-content img {
+                max-width: 200px !important;
+                width: 60% !important;
             }
         }
     </style>
@@ -278,8 +334,8 @@
                 </div>
             </div>
 
-            <!-- FOOTER BRANDING (RESTORED) -->
-            <div class="position-absolute bottom-0 w-100 text-center pb-3" style="z-index:2;">
+            <!-- FOOTER BRANDING -->
+            <div class="branding-footer">
                 <div class="quote-text" style="font-size:0.80rem; font-style:normal;">
                     Created for Small Institutions • Swadeshi Product
                 </div>
@@ -320,7 +376,7 @@
             </div>
 
             <!-- PRIVACY ICON -->
-            <div class="help-icon" style="left:32px; right:auto;">
+            <div class="help-icon privacy-icon-mobile" style="left:32px; right:auto;">
                 <i class="fa fa-user-secret"></i>
             </div>
 
