@@ -145,6 +145,28 @@
             z-index: 2;
         }
 
+        .version-label {
+            position: fixed;
+            bottom: 24px;
+            left: 67%;
+            transform: translateX(-50%);
+            z-index: 100;
+            font-size: 0.75rem;
+            color: #222;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .version-label i {
+            font-size: 0.8rem;
+            color: #333;
+        }
+
         /* MOBILE RESPONSIVE (<768px) */
         @media (max-width: 767.98px) {
             body {
@@ -245,6 +267,13 @@
                 padding: 14px 16px;
                 font-size: 0.9rem;
             }
+
+            .version-label {
+                left: 50%;
+                bottom: 8px;
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
         }
 
         /* TABLET RESPONSIVE (768px - 991px) */
@@ -296,6 +325,10 @@
             .help-panel {
                 right: 24px;
                 min-width: 240px;
+            }
+
+            .version-label {
+                left: 70%;
             }
         }
 
@@ -402,6 +435,12 @@
 
         </div>
     </div>
+</div>
+
+<!-- VERSION LABEL -->
+<div class="version-label">
+    <i class="fa fa-code-fork" aria-hidden="true"></i>
+    <span>Version 1.0.0 (Beta) </span>
 </div>
 </body>
 </html>
